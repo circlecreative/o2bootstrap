@@ -39,10 +39,10 @@
 	},
 	"autoload": {
 		"psr-4": {
-			"O2System\\Template\\": "src"
+			"O2System\\Bootstrap\\": "src"
 		},
 		"files": [
-			"src/Template.php"
+			"src/Bootstrap.php"
 		]
 	}
 }
