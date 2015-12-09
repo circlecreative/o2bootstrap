@@ -1,42 +1,110 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
 
+// ------------------------------------------------------------------------
 namespace O2System\Bootstrap\Factory;
 
 
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ *
+ * @package Label
+ */
 class Label extends Factory
 {
 	protected $_label = NULL;
-
 	protected $_attributes
 		= array(
 			'class' => ['label'],
 		);
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * build
+     * @param string | array  $label
+     * @param string $type
+     * @return object
+     */
 	public function build()
 	{
+        @list($label, $for,$type) = func_get_args();
 
-        @list($label, $type) = func_get_args();
-
-		$this->_label = $label;
-
-        if(isset($type))
+        if(is_array($label))
         {
-		    $this->add_class( 'label-' . $type );
+            foreach ($label as $labels => $label_attributes)
+            {
+
+                if(isset($this->_attributes))
+                {
+                    unset($this->_attributes);
+                    $this->_attributes['class'] = ['label'];
+                }
+
+                if(isset($label_attributes['for'])
+                {
+                    $this->_attributes['for'] = $label_attributes['for'];
+                }
+
+                if(isset($label_attributes['class']))
+                {
+                    $this->add_class('label-'.$label_attributes['class']);
+                }
+
+                if(isset($label_attributes['id']))
+                {
+                    $this->_attributes['id'] = $label_attributes['id'];
+                }
+
+                $array_label[$labels] = $this->_attributes;
+            }
+
+            $this->_label = $array_label;
+
+        }
+        else
+        {
+            $this->_label = $label;
+
+            if(isset($for)
+            {
+                $this->_attributes['for'] = $for;
+            }
+
+            if(isset($type))
+            {
+                $this->add_class( 'label-' . $type );
+            }
         }
 
-		return $this;
+        return $this;
+
 	}
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * magic method __call
+     * @param string | array $method
+     * @param array $args
+     * @return object | error exception
+     */
     public function __call($method, $args = array())
     {
         $method = $method === 'error' ? 'danger' : $method;
@@ -47,21 +115,22 @@ class Label extends Factory
         }
         else
         {
-            $func = array('danger','default','primary','success','info','warning');
+            $func = array('danger','primary','success','info','warning');
 
             if(in_array($method, $func))
             {
-                @list($label) = $args;
+                @list($label,$for) = $args;
 
-                return $this->create($label,$method);
+                return $this->build($label,$for,$method);
             }
             else
             {
-                echo '<h1>'.$method.' Function is not Permitted </h1>';
-                exit();
+                throw new Exception("Label::".$method."does not Exist!!", 1);
             }
         }
     }
+
+    // ------------------------------------------------------------------------
 
 	/**
 	 * Render
@@ -70,9 +139,19 @@ class Label extends Factory
 	 */
 	public function render()
 	{
-		if ( isset( $this->_label ) )
+		if ( isset( $this->_label ) && is_array($this->_label))
+        {
+            foreach ($this->_label as $label => $attributes) {
+
+
+                $output[] = (new Tag('span', $label, $attributes))->render();
+            }
+
+            return implode(PHP_EOL, $output);
+        }
+        else
 		{
-			return (new Tag('label', $this->_label, $this->_attributes))->render();
+			return (new Tag('span', $this->_label, $this->_attributes))->render();
 		}
 
 		return NULL;

@@ -12,135 +12,165 @@ use O2System\Bootstrap\Interfaces\Factory;
 
 class Tag extends Factory
 {
-    protected $_tag;
-    protected $_content = NULL;
-    protected $_attributes = array();
+	protected static $_self_closing_tags = array(
+		'area',
+		'base',
+		'br',
+		'col',
+		'command',
+		'embed',
+		'hr',
+		'img',
+		'input',
+		'keygen',
+		'link',
+		'meta',
+		'param',
+		'source',
+		'track',
+		'wbr',
+	);
 
-    public function build()
-    {
-        @list($tag, $content, $attributes) = func_get_args();
+	protected $_tag;
+	protected $_content    = NULL;
+	protected $_attributes = array();
 
-        if(isset($tag))
-        {
-            $this->_tag = $tag;
-        }
+	public function build()
+	{
+		@list( $tag, $content, $attributes ) = func_get_args();
 
-        if(isset($content))
-        {
-            if(is_array($content))
-            {
-                $attributes = $content;
-            }
-            elseif(is_string($content))
-            {
-                $this->content($content);
-            }
-            elseif($content instanceof Tag)
-            {
-                $this->_content = $content;
-            }
-        }
+		if ( isset( $tag ) )
+		{
+			$this->_tag = $tag;
+		}
 
-        $this->_attributes = $attributes;
+		if ( isset( $content ) )
+		{
+			if ( is_array( $content ) )
+			{
+				$attributes = $content;
+			}
+			elseif ( is_string( $content ) )
+			{
+				$this->content( $content );
+			}
+			elseif ( $content instanceof Tag )
+			{
+				$this->_content = $content;
+			}
+		}
 
-        return $this;
-    }
+		$this->_attributes = $attributes;
 
-    public function set_tag($tag)
-    {
-        $this->_tag = $tag;
-    }
+		return $this;
+	}
 
-    /**
-     * Set HTML ID
-     *
-     * @param   string $id
-     *
-     * @access  public
-     * @return  $this
-     */
-    public function set_id( $id )
-    {
-        $this->add_attribute( 'id', $id );
+	public function set_tag( $tag )
+	{
+		$this->_tag = $tag;
+	}
 
-        return $this;
-    }
+	/**
+	 * Set HTML ID
+	 *
+	 * @param   string $id
+	 *
+	 * @access  public
+	 * @return  $this
+	 */
+	public function set_id( $id )
+	{
+		$this->add_attribute( 'id', $id );
 
-    public function set_classes( array $classes = array() )
-    {
-        if( ! isset( $this->_attributes[ 'class' ] ) )
-        {
-            $this->_attributes[ 'class' ] = $classes;
-        }
-        else
-        {
-            $this->_attributes[ 'class' ] = array_merge( $this->_attributes[ 'class' ], $classes );
-        }
+		return $this;
+	}
 
-        return $this;
-    }
+	public function set_classes( array $classes = array() )
+	{
+		if ( ! isset( $this->_attributes[ 'class' ] ) )
+		{
+			$this->_attributes[ 'class' ] = $classes;
+		}
+		else
+		{
+			$this->_attributes[ 'class' ] = array_merge( $this->_attributes[ 'class' ], $classes );
+		}
 
-    public function add_class( $class )
-    {
-        if( ! isset( $this->_attributes[ 'class' ] ) )
-        {
-            $this->_attributes[ 'class' ] = array();
-        }
+		return $this;
+	}
 
-        array_push( $this->_attributes[ 'class' ], $class );
+	public function add_class( $class )
+	{
+		if ( ! isset( $this->_attributes[ 'class' ] ) )
+		{
+			$this->_attributes[ 'class' ] = array();
+		}
 
-        return $this;
-    }
+		array_push( $this->_attributes[ 'class' ], $class );
 
-    public function set_attributes( array $attributes = array() )
-    {
-        if( empty( $this->_attributes ))
-        {
-            $this->_attributes = $attributes;
-        }
-        else
-        {
-            $this->_attributes = array_merge( $this->_attributes, $attributes );
-        }
+		return $this;
+	}
 
-        return $this;
-    }
+	public function set_attributes( array $attributes = array() )
+	{
+		if ( empty( $this->_attributes ) )
+		{
+			$this->_attributes = $attributes;
+		}
+		else
+		{
+			$this->_attributes = array_merge( $this->_attributes, $attributes );
+		}
 
-    public function add_attribute( $name, $value )
-    {
-        $this->_attributes[ $name ] = $value;
-    }
+		return $this;
+	}
 
-    public function open()
-    {
-        return '<'. $this->_tag . $this->_stringify_attributes( $this->_attributes ) . '>';
-    }
+	public function add_attribute( $name, $value )
+	{
+		$this->_attributes[ $name ] = $value;
+	}
 
-    public function close()
-    {
-        return '</'.$this->_tag.'>';
-    }
+	public function open()
+	{
+		return '<' . $this->_tag . $this->_stringify_attributes( $this->_attributes ) . ( in_array( $this->_tag, self::$_self_closing_tags ) ? '/>' : '>' );
+	}
 
-    public function content($content)
-    {
-        $this->_content = trim($content);
-    }
+	public function close()
+	{
+		return '</' . $this->_tag . '>';
+	}
 
-    public function render()
-    {
-        $output[] = $this->open();
+	public function content( $content )
+	{
+		$this->_content = trim( $content );
+	}
 
-        if($this->_content instanceof Tag)
-        {
-            $output[] = $this->_content->render();
-        }
-        else
-        {
-            $output[] = $this->_content;
-        }
+	public function render()
+	{
+		if ( in_array( $this->_tag, self::$_self_closing_tags ) )
+		{
+			return $this->open();
+		}
+		else
+		{
+			$output[] = $this->open();
 
-        $output[] = $this->close();
+			if ( $this->_content instanceof Tag )
+			{
+				$output[] = $this->_content->render();
+			}
+			elseif ( empty( $this->_content ) )
+			{
+				$output[] = $this->close();
+				return implode( '', $output );
+			}
+			else
+			{
+				$output[] = $this->_content;
+				$output[] = $this->close();
 
-        return implode( PHP_EOL, $output );
-    }
+				return implode( PHP_EOL, $output );
+			}
+		}
+	}
 }

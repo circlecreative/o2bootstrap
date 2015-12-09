@@ -1,11 +1,21 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
+
+// ------------------------------------------------------------------------
 
 namespace O2System\Bootstrap\Factory;
 
@@ -13,6 +23,10 @@ namespace O2System\Bootstrap\Factory;
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ *
+ * @package Link
+ */
 class Link extends Factory
 {
     protected $_link = NULL;
@@ -24,6 +38,13 @@ class Link extends Factory
             'class' => ['btn']
         );
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * dropdown
+     * @param array $dropdown
+     * @return object
+     */
     public function dropdown(array $dropdown=array())
     {
         $this->_dropdown = $dropdown;
@@ -32,6 +53,13 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * icon
+     * @param string $icon
+     * @return object
+     */
     public function icon($icon)
     {
         $this->_icon = $icon;
@@ -39,6 +67,12 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * tiny
+     * @return object
+     */
     public function tiny()
     {
         $this->add_class('btn-xs');
@@ -46,6 +80,12 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * small
+     * @return type
+     */
     public function small()
     {
         $this->add_class('btn-sm');
@@ -53,6 +93,12 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * medium
+     * @return object
+     */
     public function medium()
     {
         $this->add_class('btn-md');
@@ -60,6 +106,12 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * large
+     * @return object
+     */
     public function large()
     {
         $this->add_class('btn-lg');
@@ -67,6 +119,12 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * block
+     * @return object
+     */
     public function block()
     {
         $this->add_class('btn-block');
@@ -74,6 +132,12 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * active
+     * @return object
+     */
     public function active()
     {
         $this->add_class('active');
@@ -81,7 +145,12 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
 
+    /**
+     * disabled
+     * @return object
+     */
     public function disable()
     {
         $this->add_class('disabled');
@@ -89,10 +158,57 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * build
+     * @return object | string
+     */
     public function build()
     {
         @list($label, $href, $style) = func_get_args();
+
+        if(is_array($label))
+        {
+            foreach ($label as $string => $attributes)
+            {
+                if(isset($this->_attributes))
+                {
+                    unset($this->_attributes);
+                    $this->_attributes = ['class'=>['btn']];
+                }
+
+                if(isset($attributes['href']))
+                {
+                    $this->_attributes['href'] = $attributes['href'];
+                }
+
+                if(isset($attributes['class']))
+                {
+                    $this->add_class( 'btn-' . $attributes['class'] );
+                }
+
+                if(isset($attributes['id']))
+                {
+                    $this->set_id($attributes['id']);
+                }
+
+                if(isset($attributes['child']))
+                {
+                    $this->dropdown($attributes['child']);
+                    unset($attributes['child']);
+                }
+
+                $this->_link = $string;
+
+                $output[] = $this->render();
+            }
+
+            return implode(PHP_EOL,$output);
+        }
+
         $this->_link = $label;
+
         if(isset($href))
         {
             $this->_attributes['href'] = $href;
@@ -106,6 +222,14 @@ class Link extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * __call magic method
+     * @param string $method
+     * @param array $args
+     * @return type
+     */
     public function __call($method, $args = array())
     {
         $method = $method === 'error' ? 'danger' : $method;
@@ -125,11 +249,12 @@ class Link extends Factory
             }
             else
             {
-                echo '<h1>'.$method.' Function is not Permitted </h1>';
-                exit();
+                throw new Exception("Link::".$method."does not Exists!!", 1);
             }
         }
     }
+
+    // ------------------------------------------------------------------------
 
     /**
      * Render
@@ -144,7 +269,8 @@ class Link extends Factory
 
             if(isset($this->_dropdown))
             {
-                $output[] = '<div class="dropdown">';
+                $div = new Tag('div',NULL,['class'=>'dropdown']);
+                $output[] = $div->open();
             }
 
             $output[] = $link->open();
@@ -159,23 +285,26 @@ class Link extends Factory
 
             if(isset($this->_dropdown))
             {
-                $output[] = '<span class="caret"></span>';
+                $caret = (new Tag('span',NULL,['class'=>'caret']))->render();
             }
 
             $output[] = $link->close();
 
+
             if(isset($this->_dropdown))
             {
-                $drop[] = '<ul class="dropdown-menu">';
-                foreach ($this->_dropdown as $key => $value) {
-
-                    $a = (new Tag('a',$value['name'],['href'=>$value['link']]))->render();
-                    $drop[] = (new Tag('li',$a))->render();
+                $wrap = new Tag('ul',NULL,['class'=>'dropdown-menu']);
+                $drop[] = $wrap->open();
+                foreach ($this->_dropdown as $name => $attributes) {
+                    $a = (new Tag('a',$name,$attributes))->render();
+                    $drop[] = (new Tag('li',$a,array()))->render();
                 }
-                $drop[] = '</ul>';
+                $drop[] =  $wrap->close();
 
                 $output[] = implode( PHP_EOL, $drop );
-                $output[] = '</div>';
+                $output[] = $div->close();
+
+                unset($this->_dropdown);
             }
 
             return implode( PHP_EOL, $output );

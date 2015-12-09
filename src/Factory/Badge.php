@@ -1,11 +1,21 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
+
+// ------------------------------------------------------------------------
 
 namespace O2System\Bootstrap\Factory;
 
@@ -24,43 +34,12 @@ class Badge extends Factory
 
     public function build()
     {
+        @list($badge) = func_get_args();
 
-        @list($badge,$type) = func_get_args();
 
         $this->_badge = $badge;
 
-        if(isset($type))
-        {
-            $this->add_class( 'badge-' . $type );
-        }
-
         return $this;
-    }
-
-    public function __call($method, $args = array())
-    {
-        $method = $method === 'error' ? 'danger' : $method;
-
-        if(method_exists($this, $method))
-        {
-            return call_user_func_array(array($this, $method), $args);
-        }
-        else
-        {
-            $func = array('danger','default','primary','success','info','warning');
-
-            if(in_array($method, $func))
-            {
-                @list($badge) = $args;
-
-                return $this->build($badge,$method);
-            }
-            else
-            {
-                echo '<h1>'.$method.' Function is not Permitted </h1>';
-                exit();
-            }
-        }
     }
 
     /**

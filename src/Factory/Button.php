@@ -1,17 +1,31 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
+
+// ------------------------------------------------------------------------
 
 namespace O2System\Bootstrap\Factory;
 
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ * Class Bootstrap Alert Builder
+ * @package O2Boostrap\Factory
+ */
 class Button extends Factory
 {
     protected $_button = NULL;
@@ -22,6 +36,9 @@ class Button extends Factory
         = array(
             'class' => ['btn']
         );
+
+
+    // ------------------------------------------------------------------------
 
     /**
     *  jika $button data mentah isi harus array()
@@ -41,25 +58,27 @@ class Button extends Factory
 
         if(isset($button) && is_array($button))
         {
-            foreach ($button as $key => $value)
+            foreach ($button as $name => $attributes)
             {
                 unset($this->_attributes);
                 $this->_attributes = array('class'=>['btn']);
-                $this->build($value['name'],$value['type'],$value['style']);
+                $this->build($name,$attributes['type'],$attributes['class']);
                 $output[] = $this->render();
             }
 
-            $render[] = '<div class="btn-group '.$position.'" role="group">';
+            $div = new Tag('div',['class'=>['btn-group',$position],'role'=>'group']);
+            $render[] = $div->open();
             $render[] = implode(PHP_EOL, $output);
-            $render[] = '</div>';
+            $render[] = $div->close();
 
             return implode(PHP_EOL, $render);
         }
         else
         {
-            $render[] = '<div class="btn-group '.$position.'" role="group">';
+            $div = new Tag('div',['class'=>['btn-group',$position],'role'=>'group']);
+            $render[] = $div->open()
             $render[] = $button;
-            $render[] = '</div>';
+            $render[] = $div->close();
 
             return implode(PHP_EOL, $render);
         }
@@ -69,10 +88,12 @@ class Button extends Factory
 
 
      /**
-    *  jika $group data mentah isi harus array()
-    *  jika $group hasil dari proses class, isi $button harus string
-    */
-    public function toolbar($group,$position=NULL)
+      * toolbar
+      * @param string | array $group
+      * @param string $position
+      * @return object
+      */
+    public function toolbar($group,$position=NULL,$style=NULL)
     {
         if(isset($position) && $position==='right')
         {
@@ -113,6 +134,14 @@ class Button extends Factory
 
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * Dropdown
+     * @param array $dropdown
+     * @param string $pull position
+     * @return type
+     */
     public function dropdown(array $dropdown=array(),$pull=NULL)
     {
         $this->_dropdown = $dropdown;
@@ -134,6 +163,14 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * Dropup
+     * @param array $dropdown
+     * @param string $pull position
+     * @return object
+     */
     public function dropup(array $dropdown=array(),$pull=NULL)
     {
         $this->_dropup = $dropdown;
@@ -149,11 +186,16 @@ class Button extends Factory
             $this->_position = 'dropdown-menu-left';
         }
 
-
-
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * Icon
+     * @param string $icon
+     * @return object
+     */
     public function icon($icon=NULL)
     {
         $this->_icon = $icon;
@@ -161,6 +203,12 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * tiny
+     * @return object
+     */
     public function tiny()
     {
         $this->add_class('btn-xs');
@@ -168,6 +216,12 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * small
+     * @return object
+     */
     public function small()
     {
         $this->add_class('btn-sm');
@@ -175,6 +229,12 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * medium
+     * @return object
+     */
     public function medium()
     {
         $this->add_class('btn-md');
@@ -182,6 +242,12 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * large
+     * @return object
+     */
     public function large()
     {
         $this->add_class('btn-lg');
@@ -189,6 +255,12 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * block
+     * @return object
+     */
     public function block()
     {
         $this->add_class('btn-block');
@@ -196,6 +268,12 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * active
+     * @return object
+     */
     public function active()
     {
         $this->add_class('active');
@@ -203,7 +281,12 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
 
+    /**
+     * disable
+     * @return object
+     */
     public function disable()
     {
         $this->add_class('disabled');
@@ -211,18 +294,42 @@ class Button extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * left
+     * @return object
+     */
     public function left()
     {
         $this->add_class('pull-left');
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * right
+     * @return object
+     */
     public function right()
     {
         $this->add_class('pull-right');
         return $this;
     }
 
+    public function submit()
+    {
+        $this->_attributes['type'] = 'submit';
+        return $this;
+    }
+
+    // ------------------------------------------------------------------------
+
+    /**
+     * build
+     * @return object
+     */
     public function build( )
     {
         @list($button, $type, $style) = func_get_args();
@@ -231,17 +338,27 @@ class Button extends Factory
 
         if(! isset($this->_attributes['type']))
         {
-            $this->_attributes[ 'type' ] = $type;
+            $this->_attributes[ 'type' ] = 'button';
         }
 
         if(isset($style))
         {
             $this->add_class( 'btn-' . $style );
         }
+        else
+        {
+            $this->add_class( 'btn-' . $type );
+        }
 
         return $this;
     }
 
+    /**
+     * __call magid method
+     * @param string $method
+     * @param array $args
+     * @return object
+     */
     public function __call($method, $args = array())
     {
         $method = $method === 'error' ? 'danger' : $method;

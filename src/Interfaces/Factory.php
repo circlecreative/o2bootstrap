@@ -33,11 +33,11 @@ abstract class Factory
 
     abstract public function build();
 
-    public function factory()
+    /*public function factory()
     {
         $class = get_called_class();
         return new $class($this->library);
-    }
+    }*/
 
     /**
      * Set HTML ID
@@ -116,6 +116,7 @@ abstract class Factory
             {
                 return $attr;
             }
+
             foreach( $attributes as $key => $value )
             {
                 if( $key === 'class' AND is_array($value) )

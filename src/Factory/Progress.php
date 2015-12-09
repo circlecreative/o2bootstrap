@@ -1,18 +1,31 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
 
-namespace O2System\Bootstrap\Factory;
+// ------------------------------------------------------------------------
 
+namespace O2System\Bootstrap\Factory;
 
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ *
+ * @package progress
+ */
 class Progress extends Factory
 {
     protected $_progress = NULL;
@@ -28,6 +41,13 @@ class Progress extends Factory
             'style'=> "width:0%"
         );
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * stripped
+     * @param string $active
+     * @return object
+     */
     public function striped($active=NULL)
     {
         $this->add_class('progress-bar-striped');
@@ -40,8 +60,12 @@ class Progress extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
 
-
+    /**
+     * build
+     * @return object
+     */
     public function build( )
     {
         @list($progress,$type) = func_get_args();
@@ -61,6 +85,14 @@ class Progress extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * __call magic method
+     * @param string $method
+     * @param array $args
+     * @return type
+     */
     public function __call($method, $args = array())
     {
         $method = $method === 'error' ? 'danger' : $method;
@@ -80,11 +112,12 @@ class Progress extends Factory
             }
             else
             {
-                echo '<h1>'.$method.' Function is not Permitted </h1>';
-                exit();
+                throw new Exception("Progress::".$method."does not Exists!!", 1);
             }
         }
     }
+
+    // ------------------------------------------------------------------------
 
     /**
      * Render
@@ -95,10 +128,11 @@ class Progress extends Factory
     {
         if ( isset( $this->_progress ) )
         {
-            $output[] = '<div class="progress">';
+            $div = new Tag('div',NULL,['class'=>['progress']]);
+            $output[] = $div->open();
             $value = $this->_progress.'% Complete';
             $output[] = (new Tag('div',$value,$this->_attributes))->render();
-            $output[] = '</div>';
+            $output[] = $div->close();
 
             return implode( PHP_EOL, $output );
         }

@@ -1,26 +1,46 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
 
+// ------------------------------------------------------------------------
 namespace O2System\Bootstrap\Factory;
 
 
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ *
+ * @package Image
+ */
 class Image extends Factory
 {
     protected $_image = NULL;
-    protected $_attributes
-        = array(
+    protected $_attributes= array(
             'class' => ['img']
         );
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * size
+     * @param string $width
+     * @param string $height
+     * @return object
+     */
     public function size($width=NULL,$height=NULL)
     {
     	$this->_attributes['width'] = $width;
@@ -29,6 +49,13 @@ class Image extends Factory
     	return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * alt
+     * @param string $alt
+     * @return object
+     */
     public function alt($alt=NULL)
     {
     	$this->_attributes['alt'] = $alt;
@@ -36,10 +63,14 @@ class Image extends Factory
     	return $this;
     }
 
+    // ------------------------------------------------------------------------
 
+    /**
+     * build
+     * @return object
+     */
     public function build()
     {
-
         @list($image, $type) = func_get_args();
 
         $this->_attributes['src'] = $image;
@@ -52,6 +83,14 @@ class Image extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * __call magic method
+     * @param string $method
+     * @param array $args
+     * @return type
+     */
     public function __call($method, $args = array())
     {
 
@@ -69,12 +108,15 @@ class Image extends Factory
         	}
         	else
         	{
-        		echo '<h1>'.$method.' Function is not Permitted </h1>';
-        		exit();
+        		throw new Exception("Image::".$method."does not Exists!!", 1);
+
         	}
 
         }
     }
+
+    // ------------------------------------------------------------------------
+
 
     /**
      * Render

@@ -1,4 +1,4 @@
-<?php
+ <?php
 /**
  * Created by PhpStorm.
  * User: Steeven
@@ -7,12 +7,11 @@
  *
  */
 
-namespace O2System\Bootstrap\Drivers;
+namespace O2System\Bootstrap\Factory;
 
+use O2System\Bootstrap\Interfaces\Factory;
 
-use O2System\Bootstrap\Interfaces\Driver;
-
-class Thumbnail extends Driver
+class Thumbnail extends Factory
 {
 	protected $_thumbs     = array();
 	protected $_mobile_rows = 1;
@@ -63,6 +62,11 @@ class Thumbnail extends Driver
 		}
 
 		return $this;
+	}
+
+	public function build()
+	{
+
 	}
 
 	public function render()

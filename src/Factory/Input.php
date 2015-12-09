@@ -1,18 +1,31 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
 
+// ------------------------------------------------------------------------
 namespace O2System\Bootstrap\Factory;
 
 
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ *
+ * @package Input
+ */
 class Input extends Factory
 {
     protected $_input = NULL;
@@ -21,6 +34,13 @@ class Input extends Factory
             'class' => ['form-control'],
         );
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * batch
+     * @param type array $input
+     * @return type
+     */
     public function batch(array $input = array())
     {
         foreach ($input as $key => $value) {
@@ -30,6 +50,12 @@ class Input extends Factory
        return implode(PHP_EOL, $render_input);
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * build
+     * @return type
+     */
     public function build()
     {
         @list($input, $for, $value, $type) = func_get_args();
@@ -49,6 +75,11 @@ class Input extends Factory
             }
         }
 
+        if(isset($type))
+        {
+            $this->_attributes['type'] = $type;
+        }
+
         if(isset($value))
         {
             $this->_attributes[ 'value' ] = $value;
@@ -57,6 +88,12 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * inline
+     * @return object
+     */
     public function inline()
     {
         $this->_inline = TRUE;
@@ -64,6 +101,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * text
+     * @param string $value
+     * @return object
+     */
     public function text($value=NULL)
     {
         if(isset($value))
@@ -74,6 +118,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * textarea
+     * @param type $value
+     * @return object
+     */
     public function textarea($value=NULL)
     {
         if(isset($value))
@@ -84,6 +135,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * password
+     * @param string $value
+     * @return object
+     */
     public function password($value=NULL)
     {
         if(isset($value))
@@ -94,6 +152,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * password
+     * @param string $value
+     * @return object
+     */
     public function datetime($value=NULL)
     {
         if(isset($value))
@@ -104,6 +169,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * Description
+     * @param string $value
+     * @return object
+     */
     public function date($value=NULL)
     {
         if(isset($value))
@@ -114,6 +186,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * local_datetime
+     * @param string $value
+     * @return object
+     */
     public function local_datetime($value=NULL)
     {
         if(isset($value))
@@ -124,6 +203,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * month
+     * @param string $value
+     * @return object
+     */
     public function month($value=NULL)
     {
         if(isset($value))
@@ -134,6 +220,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * time
+     * @param string $value
+     * @return object
+     */
     public function time($value=NULL)
     {
         if(isset($value))
@@ -144,6 +237,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * checkbox
+     * @param string $value
+     * @return object
+     */
     public function checkbox($value=NULL,$attr = NULL)
     {
         if(isset($value))
@@ -160,21 +260,30 @@ class Input extends Factory
         return $this;
     }
 
-    public function radio($value=NULL,$attr = NULL)
-    {
-        if(isset($value))
-        {
-            $this->_attributes[ 'value' ] = $value;
-        }
+    // ------------------------------------------------------------------------
 
-        if(isset($attr) && $attr ==='checked')
+    /**
+     * radio
+     * @param string $value
+     * @return object
+     */
+    public function radio($value=NULL)
+    {
+        if(isset($value) && $value ==='checked')
         {
-            $this->_attributes['checked'] = $attr;
+            $this->_attributes['checked'] = $value;
         }
         $this->_attributes['type'] = 'radio';
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * radio
+     * @param string $value
+     * @return object
+     */
     public function select($value=NULL)
     {
         if(isset($value))
@@ -185,6 +294,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * radio
+     * @param string $value
+     * @return object
+     */
     public function email($value=NULL)
     {
         if(isset($value))
@@ -195,6 +311,13 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * radio
+     * @param string $value
+     * @return object
+     */
     public function submit($value=NULL)
     {
         if(isset($value))
@@ -205,6 +328,14 @@ class Input extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * __call magic method
+     * @param string $method
+     * @param array $args
+     * @return object
+     */
     public function __call($method, $args = array())
     {
         if(method_exists($this, $method))
@@ -217,6 +348,8 @@ class Input extends Factory
             exit();
         }
     }
+
+    // ------------------------------------------------------------------------
 
     /**
      * Render
@@ -278,7 +411,6 @@ class Input extends Factory
                 {
                     $attr_group['class'] = $this->_attributes['type'];
                 }
-
 
                 $div = new Tag('div', NULL, $attr_group);
 

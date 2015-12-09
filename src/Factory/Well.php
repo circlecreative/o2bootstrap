@@ -1,18 +1,31 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
 
-namespace O2System\Bootstrap\Factory;
+// ------------------------------------------------------------------------
 
+namespace O2System\Bootstrap\Factory;
 
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ *
+ * @package well
+ */
 class Well extends Factory
 {
     protected $_well = NULL;
@@ -21,6 +34,12 @@ class Well extends Factory
             'class' => ['well']
         );
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * build
+     * @return object
+     */
     public function build()
     {
 
@@ -45,6 +64,14 @@ class Well extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * __call meagic method
+     * @param string $method
+     * @param array $args
+     * @return object
+     */
     public function __call($method, $args = array())
     {
 
@@ -58,15 +85,17 @@ class Well extends Factory
             {
                 @list($well, $for, $type) = $args;
 
-                return $this->create($well, $for, $method);
+                return $this->build($well, $for, $method);
             }
             else
             {
-                echo '<h1>'.$method.' Function is not Permitted </h1>';
-                exit();
+                throw new Exception("Well::".$method."does not Exists!!", 1);
+
             }
         }
     }
+
+    // ------------------------------------------------------------------------
 
     /**
      * Render

@@ -1,11 +1,21 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
+
+// ------------------------------------------------------------------------
 
 namespace O2System\Bootstrap\Factory;
 
@@ -13,30 +23,36 @@ namespace O2System\Bootstrap\Factory;
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ *
+ * @package Navbar
+ */
 class Navbar extends Factory
 {
     protected $_attributes = array('class'=>array('navbar'));
     protected $_navbar;
+    protected $_brand;
+    protected $_brand_attributes;
+    protected $_menu_position;
 
     /**
-     * Add Label
-     *
-     * @param   string $label
-     * @param   string|array $link
-     * @param   array   $attributes
-     *
-     * @access  public
-     * @return  $this
+     * brand
+     * @param string $brand
+     * @param string $link
+     * @return object
      */
-
     public function brand($brand=NULL,$link='#')
     {
         $this->_brand = $brand;
-        $this->_brandattr = array('class'=>'navbar-brand','href'=>$link);
+        $this->_brand_attributes = array('class'=>'navbar-brand','href'=>$link);
 
         return $this;
     }
 
+    /**
+     * top
+     * @return object
+     */
     public function top()
     {
         $this->add_class('navbar-fixed-top');
@@ -44,6 +60,10 @@ class Navbar extends Factory
         return $this;
     }
 
+    /**
+     * bottom
+     * @return type
+     */
     public function bottom()
     {
         $this->add_class('navbar-fixed-bottom');
@@ -51,9 +71,13 @@ class Navbar extends Factory
         return $this;
     }
 
+    /**
+     * build
+     * @return type
+     */
     public function build()
     {
-        @list($navbar, $type) = func_get_args();
+        @list($navbar, $position,$type) = func_get_args();
 
         $this->_navbar = $navbar;
 
@@ -62,9 +86,21 @@ class Navbar extends Factory
             $this->add_class( 'navbar-'. $type);
         }
 
+        if(isset($position))
+        {
+            $this->_menu_position= 'pull-'.$position;
+        }
+
         return $this;
     }
 
+
+    /**
+     * __call magic method
+     * @param string $method
+     * @param array $args
+     * @return object
+     */
     public function __call($method, $args = array())
     {
         if(method_exists($this, $method))
@@ -77,77 +113,85 @@ class Navbar extends Factory
 
             if(in_array($method, $func))
             {
-                @list($panel, $for) = $args;
-
-                return $this->create($panel, $for, $method);
+                @list($navbar,$position) = $args;
+                return $this->build($navbar,$position,$method);
             }
             else
             {
-                echo '<h1>'.$method.' Function is not Permitted </h1>';
-                exit();
+                throw new Exception("Navbar::".$method."does not Exists!!", 1);
             }
         }
     }
 
-    public function render($html=NULL)
+    /**
+     * render
+     * @return object
+     */
+    public function render()
     {
         if(isset($this->_navbar))
         {
             $div = new Tag('div',NULL,$this->_attributes);
 
             $output[] = $div->open();
-            $output[] = '<div class="container-fluid">';
+
+            $container = new Tag('div',['class'=>['container-fluid']]);
+            $output[] = $container->open();
 
             if(isset($this->_brand))
             {
-                $output[] = '<div class="navbar-header">';
-                $output[] = (new Tag('a',$this->_brand,$this->_brandattr))->render();
-                $output[] =  '</div>';
+                $header = new Tag('div',['class'=>['navbar-header']]);
+                $output[] = $header->open();
+                $output[] = (new Tag('a',$this->_brand,$this->_brand_attributes))->render();
+                $output[] =  $header->close();
             }
 
-            $output[] = '<div><ul class="nav navbar-nav">';
+            $pos = (isset($this->_menu_position)) ? $this->_menu_position : '';
+            $ul = new Tag('ul',['class'=>['nav','navbar-nav', $pos]]);
+            $output[] = $ul->open();
 
-            foreach ($this->_navbar as $key => $nav) {
+            foreach ($this->_navbar as $name => $attributes)
+            {
+                $active = (isset($attributes['active'])) ? 'active' : '';
 
-                $active = ($key==0) ? 'active' : '';
-
-                if(isset($nav['child']))
+                if(isset($attributes['child']))
                 {
-                    $child[] = '<ul class="dropdown-menu">';
-                    foreach ($nav['child'] as $key => $value) {
-
-                        $a = (new Tag('a',$value['name'],['href'=>$value['link']]))->render();
+                    $ulmenu = new Tag('ul',['class'=>['dropdown-menu']]);
+                    $child[] = $ulmenu->open();
+                    foreach ($attributes['child'] as $childlabel => $childattributes)
+                    {
+                        $a = (new Tag('a',$childlabel,$childattributes))->render();
                         $child[] = (new Tag('li',$a,['class'=>'']))->render();
                     }
 
-                    $child[] = '</ul>';
+                    $child[] = $ulmenu->close();
 
                     $child_string = implode( PHP_EOL, $child );
 
-                    $caret = '<span class="caret"></span>';
-                    $a = (new Tag('a',$nav['name'].$caret,[ 'class'=>"dropdown-toggle",'data-toggle'=>"dropdown",'href'=>"#"]))->render();
+                    $caret = (new Tag('span',['class'=>['caret']]))->render();
+                    $a = (new Tag('a',$name.$caret,[ 'class'=>"dropdown-toggle",'data-toggle'=>"dropdown",'href'=>"#"]))->render();
 
                     $a = $a.$child_string;
                     $drop_attr = 'dropdown';
                 }
                 else
                 {
-                    $a = (new Tag('a',$nav['name'],['href'=>$nav['link']]))->render();
+                    $a = (new Tag('a',$name,$attributes))->render();
                     $drop_attr = '';
                 }
 
                 $output[] = (new Tag('li',$a,['class'=>[$active,$drop_attr]]))->render();
             }
 
-            $output[] = '</ul></div>';
-
-            $output[] = '</div>';
+            $output[] = $ul->close();
+            $output[] = $container->close();
             $output[] = $div->close();
-
 
             return implode( PHP_EOL, $output );
         }
 
-        return NULL;
+            $output[] = $navbar->close();
+
+            return implode( PHP_EOL, $output );
     }
 }

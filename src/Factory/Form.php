@@ -1,11 +1,21 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
+
+// ------------------------------------------------------------------------
 
 namespace O2System\Bootstrap\Factory;
 
@@ -23,12 +33,21 @@ class Form extends Factory
             'role' => 'form'
         );
 
+    protected $_style = NULL;
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * build
+     * @return type
+     */
     public function build()
     {
         @list($field, $action, $method,$style) = func_get_args();
 
         $this->_field = $field;
+
+        $this->_type  = $style;
 
         if(isset($method))
         {
@@ -42,13 +61,21 @@ class Form extends Factory
 
         if(isset($style))
         {
-            $this->add_class( 'form-' . $style );
+            $this->add_class('form-'.$style);
         }
 
         return $this;
 
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * __call magoc method
+     * @param type $method
+     * @param type $args
+     * @return type
+     */
     public function __call($method, $args = array())
     {
         $method = ($method ==='standard') ? 'vertical' : $method;
@@ -63,9 +90,9 @@ class Form extends Factory
 
             if(in_array($method, $func))
             {
-                @list($field,$action) = $args;
+                @list($field,$action,$meth) = $args;
 
-                return $this->build($field,$action,$func,$method);
+                return $this->build($field,$action,$meth,$method);
             }
             else
             {
@@ -75,30 +102,65 @@ class Form extends Factory
         }
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * render
+     * @return object
+     */
     public function render()
     {
         $form = new Tag('form',NULL,$this->_attributes);
 
         $output[] = $form->open();
 
-        if(isset($this->_field) && is_array($this->_field))
+        if($this->_type === 'horizontal' )
         {
             foreach ($this->_field as $key => $value)
             {
-                $input = new Input;
-                $render_input[] = $input->build($value['label'],$value['name'])->$value['type']($value['value'])->render();
+                $attr = array('class'=>'form-control','name'=>$value['name'],'type'=>$value['type'],'value'=>$value['value']);
+
+                $div = new Tag('div',NULL,['class'=>['form-group']]);
+                $input[] = $div->open();
+                $input[] = (new Tag('label',$value['name'],['class'=>['control-label','col-sm-2'],'for'=>$value['name']]))->render();
+                $divcol = new Tag('div',['class'=>['col-sm-10']]);
+                $input[] = $divcol->open();
+                $input[] = (new Tag('input', NULL, $attr ))->render();
+                $input[] = $divcol->close();
+                $input[] = $div->open();
             }
 
-            $output[] = implode(PHP_EOL, $render_input);
+            $wrap = new Tag('div',NULL,['class'=>['form-group']]);
+            $output[] = implode(PHP_EOL, $input);
+            $output[] = $wrap->open();
+            $wrapcol = new Tag('div',['class'=>['col-sm-offset-2','col-sm-10']]);
+            $output[] = $wrapcol->open();
             $output[] = (new Tag('button','Submit',['class'=>['btn','btn-default']]))->render();
+            $output[] = $wrapcol->close();
+            $output[] = $wrap->close();
+
         }
         else
         {
-            $output[] = $this->_field;
-            $output[] = (new Tag('button','Submit',['class'=>['btn','btn-default'],'type'=>'submit']))->render();
+
+            if(isset($this->_field) && is_array($this->_field))
+            {
+                foreach ($this->_field as $key => $value)
+                {
+                    $input = new Input;
+                    $render_input[] = $input->build($value['label'],$value['name'])->$value['type']($value['value'])->render();
+                }
+
+                $output[] = implode(PHP_EOL, $render_input);
+                $output[] = (new Tag('button','Submit',['class'=>['btn','btn-default']]))->render();
+            }
+            else
+            {
+                $output[] = $this->_field;
+                $output[] = (new Tag('button','Submit',['class'=>['btn','btn-default'],'type'=>'submit']))->render();
+            }
+
         }
-
-
 
         $output[] = $form->close();
 

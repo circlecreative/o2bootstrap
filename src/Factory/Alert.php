@@ -1,18 +1,31 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 13:24
+ * YukBisnis.com
  *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
 
+// ------------------------------------------------------------------------
 namespace O2System\Bootstrap\Factory;
 
 
 use O2System\Bootstrap\Interfaces\Factory;
 use O2System\Bootstrap\Factory\Tag;
 
+/**
+ * Class Bootstrap Alert Builder
+ * @package O2Boostrap\Factory
+ */
 class Alert extends Factory
 {
     protected $_alert = NULL;
@@ -27,20 +40,90 @@ class Alert extends Factory
             'role' => 'alert'
         );
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * Builder
+     * @return object
+     */
     public function build()
     {
         @list($alert,$type) = func_get_args();
 
-        $this->_alert = $alert;
-
-        if(isset($type))
+        if(is_array($alert) && isset($alert['list']))
         {
-            $this->add_class( 'alert-' . $type );
+            $this->_alert = $alert['list'];
+
+            if(isset($type))
+            {
+                $this->add_class( 'alert-' . $type );
+            }
         }
+        elseif(is_array($alert))
+        {
+            foreach ($alert as $string => $attributes)
+            {
+                if(isset($this->_attributes))
+                {
+                    unset($this->_attributes);
+                    $this->_attributes = [
+                                            'class' => ['alert'],
+                                            'role' => 'alert'
+                                                ];
+                }
+
+                if(isset($type))
+                {
+                    $this->add_class( 'alert-' . $type );
+                }
+
+                if(isset($attributes['class']))
+                {
+                    $this->add_class('alert-'.$attributes['class']);
+                }
+
+                if(isset($attributes['id']))
+                {
+                    $this->set_id($attributes['id']);
+                }
+
+                if(isset($attributes['dismissible']))
+                {
+                    $this->dismissible();
+                }
+
+                if(isset($attributes['icon']))
+                {
+                    $this->icon($attributes['icon']);
+                }
+
+                $this->_alert = $string;
+                $output[] = $this->render();
+
+            }
+
+            return implode(PHP_EOL, $output);
+        }
+        else
+        {
+            $this->_alert = $alert;
+
+            if(isset($type))
+            {
+                $this->add_class( 'alert-' . $type );
+            }
+        }
+
 
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * Dismissible Alert
+     * @return object
+     */
     public function dismissible()
     {
         $this->_dismissible = TRUE;
@@ -49,6 +132,14 @@ class Alert extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * Alert Title
+     * @param string $title
+     * @param string $tag
+     * @return object
+     */
     public function title($title, $tag = 'strong')
     {
         $this->_title_string = $title;
@@ -57,13 +148,27 @@ class Alert extends Factory
         return $this;
     }
 
+    // ------------------------------------------------------------------------
 
+    /**
+     * Alert Icon
+     * @param string $icon
+     * @return object
+     */
     public function icon($icon)
     {
         $this->_icon = $icon;
         return $this;
     }
 
+    // ------------------------------------------------------------------------
+
+    /**
+     * Call Method
+     * @param type $method
+     * @param type $args
+     * @return type
+     */
     public function __call($method, $args = array())
     {
         $method = $method === 'error' ? 'danger' : $method;
@@ -84,12 +189,13 @@ class Alert extends Factory
             }
             else
             {
-                echo '<h1>'.$method.' Function is not Permitted </h1>';
-                exit();
+                throw new Exception("Alert::".$method."does not Exists!!", 1);
             }
 
         }
     }
+
+    // ------------------------------------------------------------------------
 
     /**
      * Render
@@ -98,7 +204,7 @@ class Alert extends Factory
      */
     public function render()
     {
-        if ( isset( $this->_alert ) )
+        if ( isset( $this->_alert ))
         {
             $div = new Tag('div',NULL,$this->_attributes);
 

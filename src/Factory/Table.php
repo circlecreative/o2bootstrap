@@ -1,16 +1,26 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 11:30
+ * YukBisnis.com
+ *
+ * Application Engine under O2System Framework for PHP 5.4 or newer
+ *
+ * This content is released under PT. Yuk Bisnis Indonesia License
+ *
+ * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ *
+ * @package        Applications
+ * @author         Aradea
+ * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * @since          Version 2.0.0
+ * @filesource
  */
 
-namespace O2System\Bootstrap\Drivers;
+// ------------------------------------------------------------------------
+namespace O2System\Bootstrap\Factory;
 
-use O2System\Bootstrap\Interfaces\Driver;
+use O2System\Bootstrap\Interfaces\Factory;
 
-class Table extends Driver
+class Table extends Factory
 {
     /**
      * Table Caption
@@ -84,6 +94,15 @@ class Table extends Driver
         return $this;
     }
 
+    /**
+     * build
+     */
+    public function build(){}
+
+    /**
+     * table stripped
+     * @return object
+     */
     public function striped()
     {
         $this->_attributes[ 'class' ][] = 'table-striped';
@@ -91,6 +110,10 @@ class Table extends Driver
         return $this;
     }
 
+    /**
+     * table border
+     * @return object
+     */
     public function bordered()
     {
         $this->_attributes[ 'class' ][] = 'table-bordered';
@@ -98,6 +121,10 @@ class Table extends Driver
         return $this;
     }
 
+    /**
+     * table hover
+     * @return object
+     */
     public function hovered()
     {
         $this->_attributes[ 'class' ][] = 'table-hover';
@@ -105,6 +132,10 @@ class Table extends Driver
         return $this;
     }
 
+    /**
+     * table condensed
+     * @return object
+     */
     public function condensed()
     {
         $this->_attributes[ 'class' ][] = 'table-condensed';
@@ -112,6 +143,10 @@ class Table extends Driver
         return $this;
     }
 
+    /**
+     * table responsive
+     * @return object
+     */
     public function responsive()
     {
         $this->_responsive = TRUE;
@@ -133,38 +168,54 @@ class Table extends Driver
         {
             if( $this->_responsive )
             {
-                $output[] = '<div class="table-responsive">';
+                $div = new Tag('div',NULL,['class'=>['table-responsive']]);
+                $output[] = $div->open();
             }
 
             $this->_attributes['class'] = implode(' ', $this->_attributes['class']);
 
-            $output[] = '<table' . $this->_stringify_attributes() . '>';
+            $table = new Tag('table',NULL,$this->_attributes);
+            $output[] = $table->open();
+
 
             if( isset( $this->_caption ) )
             {
-                $output[] = '<caption>' . $this->_caption . '</caption>';
+                $output[] = (new Tag('caption',$this->_caption,[]))->render();
             }
+
+            $thead = new Tag('thead',[]);
+            $output[] = $thead->open();
+            foreach( $this->_headers as $key => $header )
+            {
+                $output[] = (new Tag('th',$header,[]))->render();
+            }
+            $output[] = $thead->close();
+
 
             foreach( $this->_rows as $row )
             {
-                $output[] = '<tr>';
+                $tr = new Tag('tr',NULL,[]);
+                $output[] = $tr->open();
+
                 foreach( $this->_headers as $key => $header )
                 {
-                    $output[] = '<td>' . $row[ $key ] . '</td>';
+                    $output[] = (new Tag('td',$row[$key],[]))->render();
                 }
-                $output[] = '</tr>';
+
+                $output[] = $tr->close();
             }
 
-            $output[] = '</table>';
+
+            $output[] = $table->close();
 
             if( $this->_responsive )
             {
-                $output[] = '</div>';
+                $output[] = $div->close();
             }
+
+            return implode( PHP_EOL, $output );
         }
 
-        $output = implode( PHP_EOL, $output );
-
-        print_out( $output );
+        return FALSE;
     }
 }
