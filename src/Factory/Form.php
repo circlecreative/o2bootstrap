@@ -1,171 +1,220 @@
 <?php
 /**
- * YukBisnis.com
+ * O2Bootstrap
  *
- * Application Engine under O2System Framework for PHP 5.4 or newer
+ * An open source bootstrap components factory for PHP 5.4+
  *
- * This content is released under PT. Yuk Bisnis Indonesia License
+ * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * Copyright (c) 2015, PT. Lingkar Kreasi (Circle Creative).
  *
- * @package        Applications
- * @author         Aradea
- * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
- * @since          Version 2.0.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package     O2Bootstrap
+ * @author      Circle Creative Dev Team
+ * @copyright   Copyright (c) 2005 - 2015, .
+ * @license     http://circle-creative.com/products/o2bootstrap/license.html
+ * @license     http://opensource.org/licenses/MIT  MIT License
+ * @link        http://circle-creative.com/products/o2parser.html
  * @filesource
  */
-
 // ------------------------------------------------------------------------
-
 namespace O2System\Bootstrap\Factory;
 
 
-use O2System\Bootstrap\Interfaces\Factory;
-use O2System\Bootstrap\Factory\Tag;
-use O2System\Bootstrap\Factory\Input;
+use O2System\Bootstrap\Interfaces\FactoryInterface;
+use O2System\Bootstrap\Interfaces\ItemsInterface;
 
-class Form extends Factory
+class Form extends FactoryInterface
 {
-    protected $_form = NULL;
-    protected $_attributes
-        = array(
-            'class' => ['form'],
-            'role' => 'form'
-        );
+	const DEFAULT_FORM    = 'FORM_GROUP';
+	const VERTICAL_FORM   = 'FORM_GROUP_VERTICAL';
+	const HORIZONTAL_FORM = 'FORM_GROUP_HORIZONTAL';
+	const INLINE_FORM     = 'FORM_GROUP_INLINE';
 
-    protected $_style = NULL;
+	const INSERT_FORM = 'FORM_INSERT';
+	const UPDATE_FORM = 'FORM_UPDATE';
 
-    // ------------------------------------------------------------------------
+	protected $_tag        = 'form';
+	protected $_attributes = array(
+		'role' => 'form',
+	);
 
-    /**
-     * build
-     * @return type
-     */
-    public function build()
-    {
-        @list($field, $action, $method,$style) = func_get_args();
+	protected $_type   = 'FORM_INSERT';
+	protected $_layout = 'standard';
 
-        $this->_field = $field;
+	public $fieldsets = array(
+		'main' => array(),
+		'buttons' => array(),
+	);
 
-        $this->_type  = $style;
+	/**
+	 * build
+	 *
+	 * @return type
+	 */
+	public function build()
+	{
+		@list( $type, $attr ) = func_get_args();
 
-        if(isset($method))
-        {
-            $this->_attributes['method'] = $method;
-        }
+		if ( is_string( $type ) )
+		{
+			$this->add_class( 'form-' . $type );
+		}
+		elseif ( is_array( $type ) )
+		{
+			$attr = $type;
+		}
 
-        if(isset($action))
-        {
-            $this->_attributes['action'] = $action;
-        }
+		if ( isset( $attr ) )
+		{
+			$this->add_attributes( $attr );
+		}
 
-        if(isset($style))
-        {
-            $this->add_class('form-'.$style);
-        }
+		return $this;
 
-        return $this;
+	}
 
-    }
-
-    // ------------------------------------------------------------------------
-
-    /**
-     * __call magoc method
-     * @param type $method
-     * @param type $args
-     * @return type
-     */
-    public function __call($method, $args = array())
-    {
-        $method = ($method ==='standard') ? 'vertical' : $method;
-
-        if(method_exists($this, $method))
-        {
-            return call_user_func_array(array($this, $method), $args);
-        }
-        else
-        {
-            $func = array('horizontal','inline','vertical');
-
-            if(in_array($method, $func))
-            {
-                @list($field,$action,$meth) = $args;
-
-                return $this->build($field,$action,$meth,$method);
-            }
-            else
-            {
-                echo '<h1>'.$method.' Function is not Permitted </h1>';
-                exit();
-            }
-        }
-    }
-
-    // ------------------------------------------------------------------------
-
-    /**
-     * render
-     * @return object
-     */
-    public function render()
-    {
-        $form = new Tag('form',NULL,$this->_attributes);
-
-        $output[] = $form->open();
-
-        if($this->_type === 'horizontal' )
-        {
-            foreach ($this->_field as $key => $value)
-            {
-                $attr = array('class'=>'form-control','name'=>$value['name'],'type'=>$value['type'],'value'=>$value['value']);
-
-                $div = new Tag('div',NULL,['class'=>['form-group']]);
-                $input[] = $div->open();
-                $input[] = (new Tag('label',$value['name'],['class'=>['control-label','col-sm-2'],'for'=>$value['name']]))->render();
-                $divcol = new Tag('div',['class'=>['col-sm-10']]);
-                $input[] = $divcol->open();
-                $input[] = (new Tag('input', NULL, $attr ))->render();
-                $input[] = $divcol->close();
-                $input[] = $div->open();
-            }
-
-            $wrap = new Tag('div',NULL,['class'=>['form-group']]);
-            $output[] = implode(PHP_EOL, $input);
-            $output[] = $wrap->open();
-            $wrapcol = new Tag('div',['class'=>['col-sm-offset-2','col-sm-10']]);
-            $output[] = $wrapcol->open();
-            $output[] = (new Tag('button','Submit',['class'=>['btn','btn-default']]))->render();
-            $output[] = $wrapcol->close();
-            $output[] = $wrap->close();
-
-        }
-        else
-        {
-
-            if(isset($this->_field) && is_array($this->_field))
-            {
-                foreach ($this->_field as $key => $value)
-                {
-                    $input = new Input;
-                    $render_input[] = $input->build($value['label'],$value['name'])->$value['type']($value['value'])->render();
-                }
-
-                $output[] = implode(PHP_EOL, $render_input);
-                $output[] = (new Tag('button','Submit',['class'=>['btn','btn-default']]))->render();
-            }
-            else
-            {
-                $output[] = $this->_field;
-                $output[] = (new Tag('button','Submit',['class'=>['btn','btn-default'],'type'=>'submit']))->render();
-            }
-
-        }
-
-        $output[] = $form->close();
-
-        return implode(PHP_EOL, $output);
-    }
+	// ------------------------------------------------------------------------
 
 
+	public function add_group( $group )
+	{
+		if ( ! in_array( $group, array_keys( $this->fieldsets ) ) )
+		{
+			$this->fieldsets[ $group ] = array();
+		}
+	}
+
+	public function set_type( $type )
+	{
+		$this->_type = $type;
+	}
+
+	public function set_attributes( array $attr )
+	{
+		if ( class_exists( 'O2System', FALSE ) )
+		{
+			if ( empty( $attr[ 'id' ] ) )
+			{
+				$attr[ 'id' ] = implode( '-', \O2System::URI()->segments ) . '-form';
+			}
+		}
+
+		$this->add_attributes( $attr );
+
+		return $this;
+	}
+
+	public function set_layout( $layout )
+	{
+		$this->_layout = $layout;
+
+		switch ( $layout )
+		{
+			case 'columns':
+
+				$this->add_group( 'sidebar' );
+
+				break;
+
+			default:
+			case 'standard':
+				# code...
+				break;
+		}
+
+		return $this;
+	}
+
+	public function set_fieldsets( array $fieldsets, $group = 'main' )
+	{
+		if ( array_key_exists( $group, $this->_fieldsets ) )
+		{
+			foreach ( $fieldsets as $legend => $fieldset )
+			{
+				$this->set_fieldset( $fieldset, $legend, $group );
+			}
+		}
+	}
+
+	public function set_fieldset( array $fieldset, $legend = '', $group = 'main' )
+	{
+		if ( array_key_exists( $group, $this->_fieldsets ) )
+		{
+			$this->fieldsets[ $group ][ $legend ] = $fieldset;
+		}
+	}
+
+	public function set_buttons( array $buttons )
+	{
+		$this->_custom_buttons = $buttons;
+	}
+
+	public function render()
+	{
+		// Collect Fieldsets
+		$fieldsets = new Fieldset( $this->fieldsets );
+
+		// Collect Buttons
+		switch ( $this->_type )
+		{
+			case 'FORM_UPDATE':
+
+				$buttons = new Button( $this->_update_buttons );
+
+				break;
+
+			default:
+
+				$buttons = new Button( $this->_insert_buttons );
+
+				break;
+		}
+
+		if ( ! empty( $this->_custom_buttons ) )
+		{
+			$buttons = new Button( $this->_custom_buttons );
+		}
+
+		$form = new Tag( 'form', $this->_config[ 'attr' ] );
+
+		foreach ( $this->_library->_paths as $path )
+		{
+			if ( is_dir( $layout_path = $path . 'views' . DIRECTORY_SEPARATOR . 'forms' . DIRECTORY_SEPARATOR . 'layouts' . DIRECTORY_SEPARATOR ) )
+			{
+				foreach ( $this->_library->parser->extensions as $extension )
+				{
+					if ( is_file( $filepath = $layout_path . $this->_config[ 'layout' ] . $extension ) )
+					{
+						$content = $this->_library->parser->parse_file( $filepath, [ 'fieldsets' => $fieldsets, 'buttons' => $buttons ], TRUE );
+						$form->set_content( $content );
+					}
+				}
+			}
+		}
+
+		return $form->render();
+	}
+
+	public function __toString()
+	{
+		return $this->render();
+	}
 }

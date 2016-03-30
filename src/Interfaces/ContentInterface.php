@@ -36,103 +36,78 @@
  */
 // ------------------------------------------------------------------------
 
-namespace O2System\Bootstrap\Factory;
+namespace O2System\Bootstrap\Interfaces;
 
+use O2System\Bootstrap\Factory\Lists;
 
-use O2System\Bootstrap\Interfaces\FactoryInterface;
-use O2System\Bootstrap\Interfaces\PrintableInterface;
-use O2System\Bootstrap\Interfaces\ResponsiveInterface;
-use O2System\Bootstrap\Interfaces\TypographyInterface;
-
-class Badge extends FactoryInterface
+trait ContentInterface
 {
-	use PrintableInterface;
-	use ResponsiveInterface;
-	use TypographyInterface;
+	protected $_content = array();
 
-	protected $_tag      = 'span';
-	protected $_value    = NULL;
-	public    $container = NULL;
-
-	protected $_attributes = array(
-		'class' => [ 'badge' ],
-	);
-
-	public function build()
+	public function set_content( $content )
 	{
-		@list( $value, $container, $attr ) = func_get_args();
-
-		if ( is_string( $value ) OR is_numeric( $value ) )
+		if ( is_array( $content ) )
 		{
-			$this->_value = $value;
-		}
-		elseif ( $value instanceof FactoryInterface )
-		{
-			$container = $value;
-		}
-		elseif ( is_array( $value ) )
-		{
-			$attr = $value;
-		}
+			$lists = new Lists();
 
-		if ( isset( $container ) )
-		{
-			$this->set_container( $container );
-		}
-
-		if ( isset( $attr ) )
-		{
-			$this->add_attributes( $attr );
-		}
-
-		return $this;
-	}
-
-	public function set_value( $badge )
-	{
-		$this->_value = $badge;
-
-		return $this;
-	}
-
-	public function __clone()
-	{
-		if ( is_object( $this->container ) )
-		{
-			$this->container = clone $this->container;
-		}
-
-		return $this;
-	}
-
-	/**
-	 * Render
-	 *
-	 * @return null|string
-	 */
-	public function render()
-	{
-		if ( isset( $this->_value ) )
-		{
-			if ( isset( $this->container ) )
+			foreach ( $content as $list )
 			{
-				if ( method_exists( $this->container, 'append_label' ) )
-				{
-					$this->container->append_label( new Tag( $this->_tag, $this->_value, $this->_attributes ) );
-				}
-				elseif ( method_exists( $this->container, 'append_content' ) )
-				{
-					$this->container->append_content( new Tag( $this->_tag, $this->_value, $this->_attributes ) );
-				}
+				$lists->add_item( $list );
+			}
 
-				return $this->container->render();
-			}
-			else
-			{
-				return ( new Tag( $this->_tag, $this->_value, $this->_attributes ) )->render();
-			}
+			$content = $lists;
 		}
 
-		return '';
+		$this->_content = [ $content ];
+
+		return $this;
+	}
+
+	public function reset_content()
+	{
+		if ( count( $this->_content ) > 0 )
+		{
+			$this->_content = [ reset( $this->_content ) ];
+		}
+
+		return $this;
+	}
+
+	public function prepend_content( $content )
+	{
+		if ( is_array( $content ) )
+		{
+			$lists = new Lists();
+
+			foreach ( $content as $list )
+			{
+				$lists->add_item( $list );
+			}
+
+			$content = $lists;
+		}
+
+		array_unshift( $this->_content, $content );
+
+		return $this;
+	}
+
+	public function append_content( $content )
+	{
+		if ( is_array( $content ) )
+		{
+			$lists = new Lists();
+
+			foreach ( $content as $list )
+			{
+				$lists->add_item( $list );
+			}
+
+			$content = $lists;
+		}
+
+		$this->_content[] = $content;
+
+		return $this;
 	}
 }

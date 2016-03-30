@@ -1,269 +1,299 @@
 <?php
 /**
- * YukBisnis.com
+ * O2Bootstrap
  *
- * Application Engine under O2System Framework for PHP 5.4 or newer
+ * An open source bootstrap components factory for PHP 5.4+
  *
- * This content is released under PT. Yuk Bisnis Indonesia License
+ * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * Copyright (c) 2015, PT. Lingkar Kreasi (Circle Creative).
  *
- * @package        Applications
- * @author         Aradea
- * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
- * @since          Version 2.0.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package     O2Bootstrap
+ * @author      Circle Creative Dev Team
+ * @copyright   Copyright (c) 2005 - 2015, .
+ * @license     http://circle-creative.com/products/o2bootstrap/license.html
+ * @license     http://opensource.org/licenses/MIT  MIT License
+ * @link        http://circle-creative.com/products/o2parser.html
  * @filesource
  */
-
 // ------------------------------------------------------------------------
+
 namespace O2System\Bootstrap\Factory;
 
-
-use O2System\Bootstrap\Interfaces\Factory;
-use O2System\Bootstrap\Factory\Tag;
+use O2System\Bootstrap\Interfaces\FactoryInterface;
+use O2System\Bootstrap\Interfaces\ContextualInterface;
+use O2System\Bootstrap\Interfaces\IconInterface;
+use O2System\Bootstrap\Interfaces\PrintableInterface;
+use O2System\Bootstrap\Interfaces\ContentInterface;
 
 /**
  * Class Bootstrap Alert Builder
+ *
  * @package O2Boostrap\Factory
  */
-class Alert extends Factory
+class Alert extends FactoryInterface
 {
-    protected $_alert = NULL;
-    protected $_dismissible = FALSE;
-    protected $_title_string = NULL;
-    protected $_title_tag = 'strong';
-    protected $_icon = NULL;
+	use PrintableInterface;
+	use IconInterface;
+	use ContextualInterface;
+	use ContentInterface;
 
-    protected $_attributes
-        = array(
-            'class' => ['alert'],
-            'role' => 'alert'
-        );
+	const SUCCESS_ALERT = 'success';
+	const INFO_ALERT    = 'info';
+	const WARNING_ALERT = 'warning';
+	const DANGER_ALERT  = 'danger';
 
-    // ------------------------------------------------------------------------
+	protected $_tag = 'div';
 
-    /**
-     * Builder
-     * @return object
-     */
-    public function build()
-    {
-        @list($alert,$type) = func_get_args();
+	protected $_attributes = array(
+		'class' => [ 'alert' ],
+		'role'  => 'alert',
+	);
 
-        if(is_array($alert) && isset($alert['list']))
-        {
-            $this->_alert = $alert['list'];
+	protected $_is_dismissible = FALSE;
 
-            if(isset($type))
-            {
-                $this->add_class( 'alert-' . $type );
-            }
-        }
-        elseif(is_array($alert))
-        {
-            foreach ($alert as $string => $attributes)
-            {
-                if(isset($this->_attributes))
-                {
-                    unset($this->_attributes);
-                    $this->_attributes = [
-                                            'class' => ['alert'],
-                                            'role' => 'alert'
-                                                ];
-                }
+	public $title = NULL;
 
-                if(isset($type))
-                {
-                    $this->add_class( 'alert-' . $type );
-                }
+	// ------------------------------------------------------------------------
 
-                if(isset($attributes['class']))
-                {
-                    $this->add_class('alert-'.$attributes['class']);
-                }
+	/**
+	 * Builder
+	 *
+	 * @return object
+	 */
+	public function build()
+	{
+		@list( $content, $type, $attr ) = func_get_args();
 
-                if(isset($attributes['id']))
-                {
-                    $this->set_id($attributes['id']);
-                }
+		$this->set_contextual_class_prefix( 'alert' );
 
-                if(isset($attributes['dismissible']))
-                {
-                    $this->dismissible();
-                }
+		if ( is_array( $content ) )
+		{
+			$lists = new Lists( Lists::LIST_UNSTYLED );
+			$lists->add_class( 'alert-list' );
 
-                if(isset($attributes['icon']))
-                {
-                    $this->icon($attributes['icon']);
-                }
+			foreach ( $content as $list )
+			{
+				$lists->add_item( $list );
+			}
 
-                $this->_alert = $string;
-                $output[] = $this->render();
+			$this->_content[] = $lists;
+		}
+		elseif ( is_string( $content ) )
+		{
+			if ( in_array( $content, $this->_contextual_classes ) AND !
+				in_array( $content, [ 'default', 'primary' ] )
+			)
+			{
+				$this->{'is_' . $content}();
+			}
+			else
+			{
+				$this->_content[] = $content;
+			}
+		}
 
-            }
+		if ( isset( $type ) )
+		{
+			if ( is_array( $type ) )
+			{
+				$this->add_attributes( $type );
+			}
+			elseif ( is_string( $type ) )
+			{
+				if ( in_array( $type, $this->_contextual_classes ) AND !
+					in_array( $type, [ 'default', 'primary' ] )
+				)
+				{
+					$this->{'is_' . $type}();
+				}
+			}
+		}
 
-            return implode(PHP_EOL, $output);
-        }
-        else
-        {
-            $this->_alert = $alert;
+		if ( isset( $attr ) )
+		{
+			if ( is_array( $attr ) )
+			{
+				$this->add_attributes( $attr );
+			}
+			elseif ( is_string( $attr ) )
+			{
+				if ( in_array( $attr, $this->_contextual_classes ) AND !
+					in_array( $attr, [ 'default', 'primary' ] )
+				)
+				{
+					$this->{'is_' . $attr}();
+				}
+			}
+		}
 
-            if(isset($type))
-            {
-                $this->add_class( 'alert-' . $type );
-            }
-        }
+		return $this;
+	}
 
+	// ------------------------------------------------------------------------
 
-        return $this;
-    }
+	public function __clone()
+	{
+		if ( is_object( $this->title ) )
+		{
+			$this->title = clone $this->title;
+		}
 
-    // ------------------------------------------------------------------------
+		return $this;
+	}
 
-    /**
-     * Dismissible Alert
-     * @return object
-     */
-    public function dismissible()
-    {
-        $this->_dismissible = TRUE;
-        $this->add_class('alert-dismissible');
+	/**
+	 * Dismissible Alert
+	 *
+	 * @return object
+	 */
+	public function is_dismissible()
+	{
+		$this->_is_dismissible = TRUE;
+		$this->add_class( 'alert-dismissible' );
 
-        return $this;
-    }
+		return $this;
+	}
 
-    // ------------------------------------------------------------------------
+	// ------------------------------------------------------------------------
 
-    /**
-     * Alert Title
-     * @param string $title
-     * @param string $tag
-     * @return object
-     */
-    public function title($title, $tag = 'strong')
-    {
-        $this->_title_string = $title;
-        $this->_title_tag = $tag;
+	/**
+	 * Alert Title
+	 *
+	 * @param string $title
+	 * @param string $tag
+	 *
+	 * @return object
+	 */
+	public function set_title( $title, $tag = 'strong', $attr = array() )
+	{
+		if ( is_array( $tag ) )
+		{
+			$attr = $tag;
+		}
 
-        return $this;
-    }
+		if ( $title instanceof Factory )
+		{
+			$this->title = clone $title;
+			$this->title->set_tag( $tag );
+			$this->title->add_class( 'alert-title' );
+		}
+		else
+		{
+			if ( isset( $attr[ 'class' ] ) )
+			{
+				if ( is_array( $attr[ 'class' ] ) )
+				{
+					array_push( $attr[ 'class' ], 'alert-title' );
+				}
+				else
+				{
+					$attr[ 'class' ] = $attr[ 'class' ] . ' alert-title';
+				}
+			}
+			else
+			{
+				$attr[ 'class' ] = 'alert-title';
+			}
 
-    // ------------------------------------------------------------------------
+			if ( isset( $attr[ 'style' ] ) )
+			{
+				$attr[ 'style' ] = $attr[ 'style' ] . ' margin-top: 0px;';
+			}
+			else
+			{
+				$attr[ 'style' ] = 'margin-top: 0px;';
+			}
 
-    /**
-     * Alert Icon
-     * @param string $icon
-     * @return object
-     */
-    public function icon($icon)
-    {
-        $this->_icon = $icon;
-        return $this;
-    }
+			$this->title = new Tag( $tag, ucwords( $title ), $attr );
+		}
 
-    // ------------------------------------------------------------------------
+		return $this;
+	}
 
-    /**
-     * Call Method
-     * @param type $method
-     * @param type $args
-     * @return type
-     */
-    public function __call($method, $args = array())
-    {
-        $method = $method === 'error' ? 'danger' : $method;
+	// ------------------------------------------------------------------------
 
-        if(method_exists($this, $method))
-        {
-            return call_user_func_array(array($this, $method), $args);
-        }
-        else
-        {
-            $func = array('danger','default','primary','success','info','warning');
+	/**
+	 * Render
+	 *
+	 * @return null|string
+	 */
+	public function render()
+	{
+		if ( ! empty( $this->_content ) )
+		{
+			if ( $this->_is_dismissible === TRUE )
+			{
+				$output[] = ( new Tag( 'button',
+				                       new Tag( 'span', '&times;', [ 'aria-hidden' => 'true' ] ),
+				                       array(
+					                       'type'         => 'button',
+					                       'class'        => 'close',
+					                       'data-dismiss' => 'alert',
+					                       'aria-label'   => 'Close',
+				                       ) ) );
+			}
 
-            if(in_array($method, $func))
-            {
-                @list($alert, $for) = $args;
+			if ( isset( $this->title ) )
+			{
+				if ( isset( $this->icon ) )
+				{
+					$this->icon->add_class( 'alert-icon' );
 
-                return $this->build($alert, $method);
-            }
-            else
-            {
-                throw new Exception("Alert::".$method."does not Exists!!", 1);
-            }
+					$this->title->prepend_content( $this->icon );
+				}
 
-        }
-    }
+				$output[] = $this->title;
+			}
+			elseif ( isset( $this->icon ) )
+			{
+				$output[] = $this->icon;
+			}
 
-    // ------------------------------------------------------------------------
+			$content = implode( '<br />', $this->_content );
 
-    /**
-     * Render
-     *
-     * @return null|string
-     */
-    public function render()
-    {
-        if ( isset( $this->_alert ))
-        {
-            $div = new Tag('div',NULL,$this->_attributes);
+			$DOMDocument = new \DOMDocument();
+			libxml_use_internal_errors( TRUE );
+			$DOMDocument->loadHTML( $content, LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD );
+			libxml_clear_errors();
+			$links = $DOMDocument->getElementsByTagName( 'a' );
 
-            $output[] = $div->open();
+			if ( $links->length > 0 )
+			{
+				foreach ( $links as $link )
+				{
+					$class = $link->getAttribute( 'class' );
+					$class = $class . ' alert-link';
 
-            if($this->_dismissible===TRUE)
-            {
-                $output[] = (new Tag('button',
-                    new Tag('span','&times;',['aria-hidden'=>'true'])
-                    , [
-                    'type' => 'button',
-                    'class' => 'close',
-                    'data-dismiss' => 'alert',
-                    'aria-label' => 'Close'
-                ]))->render();
-            }
+					$link->setAttribute( 'class', trim( $class ) );
+				}
 
+				$content = $DOMDocument->saveHTML();
+			}
 
-            if(isset($this->_title_string))
-            {
-                $title = '';
+			$output[] = $content;
 
-                if(isset($this->_icon))
-                {
-                    $title = (new Tag('i',NULL,['class'=>$this->_icon,'aria-hidden'=>'true']))->render();
-                }
+			return ( new Tag( $this->_tag, implode( PHP_EOL, $output ), $this->_attributes ) )->render();
+		}
 
-                $title.= '&nbsp;'.$this->_title_string;
-
-                $output[] = (new Tag($this->_title_tag,$title,array()))->render();
-            }
-            elseif(isset($this->_icon))
-            {
-                $output[] = (new Tag('i',NULL,['class'=>$this->_icon,'aria-hidden'=>'true']))->render();
-            }
-
-            if(is_array($this->_alert))
-            {
-                $output[] = '<br />';
-                $list = new Tag('ul', NULL,['class' => 'alert-list']);
-
-                $output[] = $list->open();
-                foreach($this->_alert as $_alert)
-                {
-                    $output[] = (new Tag('li', $_alert,array()))->render();
-                }
-
-                $output[] = $list->close();
-            }
-            else
-            {
-                $output[] = $this->_alert;
-            }
-
-            $output[] = $div->close();
-
-            return implode( PHP_EOL, $output );
-        }
-
-        return NULL;
-    }
+		return '';
+	}
 }

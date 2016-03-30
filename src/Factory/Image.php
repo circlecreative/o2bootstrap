@@ -1,135 +1,209 @@
 <?php
 /**
- * YukBisnis.com
+ * O2Bootstrap
  *
- * Application Engine under O2System Framework for PHP 5.4 or newer
+ * An open source bootstrap components factory for PHP 5.4+
  *
- * This content is released under PT. Yuk Bisnis Indonesia License
+ * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * Copyright (c) 2015, PT. Lingkar Kreasi (Circle Creative).
  *
- * @package        Applications
- * @author         Aradea
- * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
- * @since          Version 2.0.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package     O2Bootstrap
+ * @author      Circle Creative Dev Team
+ * @copyright   Copyright (c) 2005 - 2015, .
+ * @license     http://circle-creative.com/products/o2bootstrap/license.html
+ * @license     http://opensource.org/licenses/MIT  MIT License
+ * @link        http://circle-creative.com/products/o2parser.html
  * @filesource
  */
-
 // ------------------------------------------------------------------------
+
 namespace O2System\Bootstrap\Factory;
 
 
-use O2System\Bootstrap\Interfaces\Factory;
-use O2System\Bootstrap\Factory\Tag;
+use O2System\Bootstrap\Interfaces\FactoryInterface;
 
 /**
  *
  * @package Image
  */
-class Image extends Factory
+class Image extends FactoryInterface
 {
-    protected $_image = NULL;
-    protected $_attributes= array(
-            'class' => ['img']
-        );
+	const CIRCLE_IMAGE     = 'circle';
+	const RESPONSIVE_IMAGE = 'responsive';
+	const THUMBNAIL_IMAGE  = 'thumbnail';
 
-    // ------------------------------------------------------------------------
+	protected $_tag        = 'img';
+	protected $_attributes = array(
+		'class' => [ 'img' ],
+	);
 
-    /**
-     * size
-     * @param string $width
-     * @param string $height
-     * @return object
-     */
-    public function size($width=NULL,$height=NULL)
-    {
-    	$this->_attributes['width'] = $width;
-    	$this->_attributes['height'] = $height;
+	protected $_realpath = NULL;
 
-    	return $this;
-    }
+	// ------------------------------------------------------------------------
 
-    // ------------------------------------------------------------------------
+	/**
+	 * build
+	 *
+	 * @return object
+	 */
+	public function build()
+	{
+		@list( $source, $type, $attr ) = func_get_args();
 
-    /**
-     * alt
-     * @param string $alt
-     * @return object
-     */
-    public function alt($alt=NULL)
-    {
-    	$this->_attributes['alt'] = $alt;
+		if ( isset( $source ) )
+		{
+			if ( is_string( $source ) )
+			{
+				if ( in_array( $source, [ 'circle', 'responsive', 'thumbnail' ] ) )
+				{
+					$type = $source;
+				}
+				else
+				{
+					$this->set_source( $source );
+				}
+			}
+			elseif ( is_array( $source ) )
+			{
+				$attr = $source;
+			}
+		}
 
-    	return $this;
-    }
+		if ( isset( $type ) )
+		{
+			if ( is_string( $type ) )
+			{
+				if ( in_array( $type, [ 'circle', 'responsive', 'thumbnail' ] ) )
+				{
+					$this->add_class( 'img-' . $type );
+				}
+			}
+			elseif ( is_array( $type ) )
+			{
+				$attr = $type;
+			}
+		}
 
-    // ------------------------------------------------------------------------
+		if ( isset( $attr ) )
+		{
+			$this->add_attributes( $attr );
+		}
 
-    /**
-     * build
-     * @return object
-     */
-    public function build()
-    {
-        @list($image, $type) = func_get_args();
+		return $this;
+	}
 
-        $this->_attributes['src'] = $image;
+	// ------------------------------------------------------------------------
 
-        if(isset($type))
-        {
-            $this->add_class( 'img-' . $type );
-        }
+	public function set_source( $source )
+	{
+		if ( is_file( $source ) )
+		{
+			$this->_realpath = $source;
+			$source = path_to_url( $source );
+			$this->_attributes[ 'src' ] = $source;
+		}
+		elseif ( strpos( $source, 'http' ) !== FALSE )
+		{
+			$this->_attributes[ 'src' ] = $source;
+		}
 
-        return $this;
-    }
+		return $this;
+	}
 
-    // ------------------------------------------------------------------------
+	/**
+	 * SizeInterface
+	 *
+	 * @param string $width
+	 * @param string $height
+	 *
+	 * @return object
+	 */
+	public function set_size( array $size )
+	{
+		$key = key( $size );
 
-    /**
-     * __call magic method
-     * @param string $method
-     * @param array $args
-     * @return type
-     */
-    public function __call($method, $args = array())
-    {
+		if ( is_numeric( $key ) )
+		{
+			$this->set_width( reset( $size ) );
+			$this->set_height( end( $size ) );
+		}
+		elseif ( isset( $size[ 'width' ] ) )
+		{
+			$this->set_width( $size[ 'width' ] );
+			$this->set_height( $size[ 'height' ] );
+		}
 
-        if(method_exists($this, $method))
-        {
-            return call_user_func_array(array($this, $method), $args);
-        }
-        else
-        {
-        	if(in_array($method, array('circle','responsive','thumbnail')))
-        	{
-        		@list($image, $type) = $args;
+		return $this;
+	}
 
-            	return $this->build($image,$method);
-        	}
-        	else
-        	{
-        		throw new Exception("Image::".$method."does not Exists!!", 1);
+	public function set_width( $width )
+	{
+		$this->_attributes[ 'width' ] = $width;
 
-        	}
+		return $this;
+	}
 
-        }
-    }
+	public function set_height( $height )
+	{
+		$this->_attributes[ 'height' ] = $height;
 
-    // ------------------------------------------------------------------------
+		return $this;
+	}
 
+	// ------------------------------------------------------------------------
 
-    /**
-     * Render
-     *
-     * @return null|string
-     */
-    public function render()
-    {
-        if ( isset( $this->_attributes['src'] ) )
-        {
-            return (new Tag('img', NULL, $this->_attributes))->render();
-        }
+	/**
+	 * alt
+	 *
+	 * @param string $alt
+	 *
+	 * @return object
+	 */
+	public function set_alt( $alt )
+	{
+		$this->_attributes[ 'alt' ] = $alt;
 
-        return NULL;
-    }
+		return $this;
+	}
+
+	// ------------------------------------------------------------------------
+
+	public function get_realpath()
+	{
+		return $this->_realpath;
+	}
+
+	/**
+	 * Render
+	 *
+	 * @return null|string
+	 */
+	public function render()
+	{
+		if ( isset( $this->_attributes[ 'src' ] ) )
+		{
+			return ( new Tag( $this->_tag, $this->_attributes ) )->render();
+		}
+
+		return '';
+	}
 }

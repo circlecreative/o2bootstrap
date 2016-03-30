@@ -1,221 +1,315 @@
 <?php
 /**
- * YukBisnis.com
+ * O2Bootstrap
  *
- * Application Engine under O2System Framework for PHP 5.4 or newer
+ * An open source bootstrap components factory for PHP 5.4+
  *
- * This content is released under PT. Yuk Bisnis Indonesia License
+ * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * Copyright (c) 2015, PT. Lingkar Kreasi (Circle Creative).
  *
- * @package        Applications
- * @author         Aradea
- * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
- * @since          Version 2.0.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package     O2Bootstrap
+ * @author      Circle Creative Dev Team
+ * @copyright   Copyright (c) 2005 - 2015, .
+ * @license     http://circle-creative.com/products/o2bootstrap/license.html
+ * @license     http://opensource.org/licenses/MIT  MIT License
+ * @link        http://circle-creative.com/products/o2parser.html
  * @filesource
  */
-
 // ------------------------------------------------------------------------
+
 namespace O2System\Bootstrap\Factory;
 
-use O2System\Bootstrap\Interfaces\Factory;
+use O2System\Bootstrap\Interfaces\FactoryInterface;
 
-class Table extends Factory
+class Table extends FactoryInterface
 {
-    /**
-     * Table Caption
-     *
-     * @access  protected
-     * @type    string
-     */
-    protected $_caption = NULL;
+	/**
+	 * Table Caption
+	 *
+	 * @access  protected
+	 * @type    string
+	 */
+	protected $_caption = NULL;
 
-    /**
-     * Table Headers
-     *
-     * @access  protected
-     * @type    array
-     */
-    protected $_headers = array();
+	/**
+	 * Table Headers
+	 *
+	 * @access  protected
+	 * @type    array
+	 */
+	protected $_headers = array();
 
-    /**
-     * Table Rows
-     *
-     * @access  protected
-     * @type    array
-     */
-    protected $_rows = array();
+	/**
+	 * Table Footers
+	 *
+	 * @access  protected
+	 * @type    array
+	 */
+	protected $_footers = array();
 
-    /**
-     * Table Attributes
-     *
-     * @access  protected
-     * @type    array
-     */
-    protected $_attributes = array(
-        'class' => [ 'table' ]
-    );
+	protected $_colgroup = array();
 
-    /**
-     * Table Responsive Flag
-     *
-     * @access  protected
-     * @type    bool
-     */
-    protected $_responsive = FALSE;
+	/**
+	 * Table Rows
+	 *
+	 * @access  protected
+	 * @type    array
+	 */
+	protected $_rows = array();
 
-    /**
-     * Table Headers
-     *
-     * @param   array $headers
-     *
-     * @access  public
-     * @return  $this
-     */
-    public function set_headers( array $headers = array() )
-    {
-        $this->_headers = $headers;
+	protected $_tag = 'table';
 
-        return $this;
-    }
+	/**
+	 * Table Attributes
+	 *
+	 * @access  protected
+	 * @type    array
+	 */
+	protected $_attributes = array(
+		'class' => [ 'table' ],
+	);
 
-    /**
-     * Set Rows
-     *
-     * @param   array $rows
-     *
-     * @access  public
-     * @return  $this
-     */
-    public function set_rows( array $rows = array() )
-    {
-        $this->_rows = array_merge( $this->_rows, $rows );
-
-        return $this;
-    }
-
-    /**
-     * build
-     */
-    public function build(){}
-
-    /**
-     * table stripped
-     * @return object
-     */
-    public function striped()
-    {
-        $this->_attributes[ 'class' ][] = 'table-striped';
-
-        return $this;
-    }
-
-    /**
-     * table border
-     * @return object
-     */
-    public function bordered()
-    {
-        $this->_attributes[ 'class' ][] = 'table-bordered';
-
-        return $this;
-    }
-
-    /**
-     * table hover
-     * @return object
-     */
-    public function hovered()
-    {
-        $this->_attributes[ 'class' ][] = 'table-hover';
-
-        return $this;
-    }
-
-    /**
-     * table condensed
-     * @return object
-     */
-    public function condensed()
-    {
-        $this->_attributes[ 'class' ][] = 'table-condensed';
-
-        return $this;
-    }
-
-    /**
-     * table responsive
-     * @return object
-     */
-    public function responsive()
-    {
-        $this->_responsive = TRUE;
-
-        return $this;
-    }
-
-    /**
-     * Render
-     *
-     * @access  public
-     * @return  string
-     */
-    public function render(array $attr = array())
-    {
-        $output = array();
-
-        if( ! empty( $this->_rows ) )
-        {
-            if( $this->_responsive )
-            {
-                $div = new Tag('div',NULL,['class'=>['table-responsive']]);
-                $output[] = $div->open();
-            }
-
-            $this->_attributes['class'] = implode(' ', $this->_attributes['class']);
-
-            $table = new Tag('table',NULL,$this->_attributes);
-            $output[] = $table->open();
+	/**
+	 * Table Responsive Flag
+	 *
+	 * @access  protected
+	 * @type    bool
+	 */
+	protected $_is_responsive = FALSE;
 
 
-            if( isset( $this->_caption ) )
-            {
-                $output[] = (new Tag('caption',$this->_caption,[]))->render();
-            }
+	/**
+	 * build
+	 */
+	public function build()
+	{
+		@list( $attr ) = func_get_args();
 
-            $thead = new Tag('thead',[]);
-            $output[] = $thead->open();
-            foreach( $this->_headers as $key => $header )
-            {
-                $output[] = (new Tag('th',$header,[]))->render();
-            }
-            $output[] = $thead->close();
+		if ( isset( $attr ) )
+		{
+			$this->add_attributes( $attr );
+		}
+	}
 
+	public function set_caption( $caption, $attr = array() )
+	{
+		if ( $caption instanceof FactoryInterface )
+		{
+			$caption->set_tag( 'caption' );
+		}
+		else
+		{
+			$caption = new Tag( 'caption', $caption, $attr );
+		}
 
-            foreach( $this->_rows as $row )
-            {
-                $tr = new Tag('tr',NULL,[]);
-                $output[] = $tr->open();
+		$this->_caption = $caption;
 
-                foreach( $this->_headers as $key => $header )
-                {
-                    $output[] = (new Tag('td',$row[$key],[]))->render();
-                }
+		return $this;
+	}
 
-                $output[] = $tr->close();
-            }
+	/**
+	 * Set Table Headers
+	 *
+	 * @param   array $headers
+	 *
+	 * @access  public
+	 * @return  $this
+	 */
+	public function set_headers( array $headers )
+	{
+		$this->_headers = $headers;
 
+		return $this;
+	}
 
-            $output[] = $table->close();
+	/**
+	 * Set Table Footers
+	 *
+	 * @param   array $headers
+	 *
+	 * @access  public
+	 * @return  $this
+	 */
+	public function set_footers( array $footers )
+	{
+		$this->_footers = $footers;
 
-            if( $this->_responsive )
-            {
-                $output[] = $div->close();
-            }
+		return $this;
+	}
 
-            return implode( PHP_EOL, $output );
-        }
+	/**
+	 * Set Rows
+	 *
+	 * @param   array $rows
+	 *
+	 * @access  public
+	 * @return  $this
+	 */
+	public function set_rows( array $rows )
+	{
+		foreach ( $rows as $row )
+		{
+			$this->add_row( $row );
+		}
 
-        return FALSE;
-    }
+		return $this;
+	}
+
+	public function set_colgroup( array $cols )
+	{
+
+	}
+
+	public function add_row( array $row, $attr = array() )
+	{
+		$values = array_values( $row );
+
+		if ( count( $values ) == count( $this->_headers ) )
+		{
+			$row = new Tag( 'tr', $attr );
+
+			foreach ( $values as $value )
+			{
+				$row->append_content( new Tag( 'td', $value ) );
+			}
+
+			$this->_rows[] = $row;
+		}
+
+		return $this;
+	}
+
+	/**
+	 * table stripped
+	 *
+	 * @return object
+	 */
+	public function is_striped()
+	{
+		$this->add_class( 'table-striped' );
+
+		return $this;
+	}
+
+	/**
+	 * table border
+	 *
+	 * @return object
+	 */
+	public function is_bordered()
+	{
+		$this->add_class( 'table-bordered' );
+
+		return $this;
+	}
+
+	/**
+	 * table hover
+	 *
+	 * @return object
+	 */
+	public function is_hovered()
+	{
+		$this->add_class( 'table-hover' );
+
+		return $this;
+	}
+
+	/**
+	 * table condensed
+	 *
+	 * @return object
+	 */
+	public function is_condensed()
+	{
+		$this->add_class( 'table-condensed' );
+
+		return $this;
+	}
+
+	/**
+	 * table responsive
+	 *
+	 * @return object
+	 */
+	public function is_responsive()
+	{
+		$this->_is_responsive = TRUE;
+
+		return $this;
+	}
+
+	/**
+	 * Render
+	 *
+	 * @access  public
+	 * @return  string
+	 */
+	public function render( array $attr = array() )
+	{
+		if ( ! empty( $this->_rows ) )
+		{
+			// Set Table Caption
+			if ( ! empty( $this->_caption ) )
+			{
+				$output[] = $this->_caption;
+			}
+
+			// Set Table Headers
+			$thead = new Tag( 'tr' );
+
+			foreach ( $this->_headers as $column )
+			{
+				$thead->append_content( new Tag( 'th', $column ) );
+			}
+
+			$output[] = new Tag( 'thead', $thead->render() );
+
+			// Set Table Body
+			$output[] = new Tag( 'tbody', implode( PHP_EOL, $this->_rows ) );
+
+			// Set Table Footers
+			if ( ! empty( $this->_footers ) )
+			{
+				$tfoot = new Tag( 'tr' );
+
+				foreach ( $this->_footers as $column )
+				{
+					$tfoot->append_content( new Tag( 'th', $column ) );
+				}
+
+				$output[] = new Tag( 'tfoot', $tfoot );
+			}
+
+			$table = new Tag( $this->_tag, implode( PHP_EOL, $output ), $this->_attributes );
+
+			if ( $this->_is_responsive )
+			{
+				return ( new Tag( 'div', $table, [ 'class' => 'table-responsive' ] ) )->render();
+			}
+
+			return $table->render();
+		}
+
+		return '';
+	}
 }

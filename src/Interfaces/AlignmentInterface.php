@@ -36,98 +36,25 @@
  */
 // ------------------------------------------------------------------------
 
-namespace O2System\Bootstrap\Factory;
+namespace O2System\Bootstrap\Interfaces;
 
-use O2System\Bootstrap\Interfaces\FactoryInterface;
-use O2System\Bootstrap\Interfaces\SizeInterface;
-use O2System\Bootstrap\Interfaces\ContentInterface;
-
-/**
- *
- * @package well
- */
-class Well extends FactoryInterface
+trait AlignmentInterface
 {
-	use ContentInterface;
-	use SizeInterface;
+	protected $_pull_class_prefix = 'pull';
 
-	const SMALL_WELL  = 'small';
-	const MEDIUM_WELL = 'medium';
-	const LARGE_WELL  = 'large';
-
-	protected $_tag        = 'div';
-	protected $_attributes = array(
-		'class' => [ 'well' ],
-	);
-
-	// ------------------------------------------------------------------------
+	public function set_pull_class_prefix( $prefix )
+	{
+		$this->_pull_class_prefix = $prefix;
+	}
 
 	/**
-	 * build
+	 * left
 	 *
 	 * @return object
 	 */
-	public function build()
+	public function pull_left()
 	{
-		@list( $content, $type, $attr ) = func_get_args();
-
-		$this->set_size_class_prefix( 'well' );
-
-		if ( is_array( $content ) )
-		{
-			if( ! isset( $content[ 'id' ] ) OR 
-				! isset( $content[ 'class' ] ) OR
-				! isset( $content[ 'style' ] )
-			)
-			{
-				$this->set_content( $content );
-			}
-			else
-			{
-				$attr = $content;
-			}
-		}
-		elseif ( is_string( $content ) )
-		{
-			if ( in_array( $content, $this->_sizes ) AND $content !== 'tiny' )
-			{
-				$this->{'is_' . $content}();
-			}
-			else
-			{
-				$this->set_content( $content );
-			}
-		}
-
-		if ( isset( $type ) )
-		{
-			if ( is_array( $type ) )
-			{
-				$this->add_attributes( $type );
-			}
-			elseif ( is_string( $type ) )
-			{
-				if ( in_array( $type, $this->_sizes ) AND $type !== 'tiny' )
-				{
-					$this->{'is_' . $type}();
-				}
-			}
-		}
-
-		if ( isset( $attr ) )
-		{
-			if ( is_array( $attr ) )
-			{
-				$this->add_attributes( $attr );
-			}
-			elseif ( is_string( $attr ) )
-			{
-				if ( in_array( $attr, $this->_sizes ) AND $attr !== 'tiny' )
-				{
-					$this->{'is_' . $attr}();
-				}
-			}
-		}
+		$this->add_class( $this->_pull_class_prefix . '-left' );
 
 		return $this;
 	}
@@ -135,17 +62,68 @@ class Well extends FactoryInterface
 	// ------------------------------------------------------------------------
 
 	/**
-	 * Render
+	 * right
 	 *
-	 * @return null|string
+	 * @return object
 	 */
-	public function render()
+	public function pull_right()
 	{
-		if ( ! empty( $this->_content ) )
-		{
-			return ( new Tag( $this->_tag, implode(PHP_EOL, $this->_content), $this->_attributes ) )->render();
-		}
+		$this->add_class( $this->_pull_class_prefix . '-right' );
 
-		return '';
+		return $this;
+	}
+
+	/**
+	 * left
+	 *
+	 * @return object
+	 */
+	public function align_left()
+	{
+		$this->add_class( 'align-left' );
+
+		return $this;
+	}
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * right
+	 *
+	 * @return object
+	 */
+	public function align_right()
+	{
+		$this->add_class( 'align-right' );
+
+		return $this;
+	}
+
+	public function text_left()
+	{
+		$this->add_class( 'text-left' );
+
+		return $this;
+	}
+
+	public function text_right()
+	{
+		$this->add_class( 'text-right' );
+
+		return $this;
+	}
+
+	public function text_justify()
+	{
+		$this->add_class( 'text-justify' );
+
+		return $this;
+	}
+
+	public function text_center()
+	{
+		$this->add_class( 'text-center' );
+
+		return $this;
 	}
 }

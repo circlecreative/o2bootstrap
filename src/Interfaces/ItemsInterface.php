@@ -36,103 +36,90 @@
  */
 // ------------------------------------------------------------------------
 
-namespace O2System\Bootstrap\Factory;
+namespace O2System\Bootstrap\Interfaces;
 
+use O2System\Bootstrap\Factory\Lists;
 
-use O2System\Bootstrap\Interfaces\FactoryInterface;
-use O2System\Bootstrap\Interfaces\PrintableInterface;
-use O2System\Bootstrap\Interfaces\ResponsiveInterface;
-use O2System\Bootstrap\Interfaces\TypographyInterface;
-
-class Badge extends FactoryInterface
+trait ItemsInterface
 {
-	use PrintableInterface;
-	use ResponsiveInterface;
-	use TypographyInterface;
+	protected $_items        = array();
+	protected $_num_rows     = 2;
+	protected $_num_per_rows = 3;
 
-	protected $_tag      = 'span';
-	protected $_value    = NULL;
-	public    $container = NULL;
-
-	protected $_attributes = array(
-		'class' => [ 'badge' ],
-	);
-
-	public function build()
+	public function is_empty()
 	{
-		@list( $value, $container, $attr ) = func_get_args();
+		return $this->__isEmpty();
+	}
 
-		if ( is_string( $value ) OR is_numeric( $value ) )
-		{
-			$this->_value = $value;
-		}
-		elseif ( $value instanceof FactoryInterface )
-		{
-			$container = $value;
-		}
-		elseif ( is_array( $value ) )
-		{
-			$attr = $value;
-		}
+	public function __isEmpty()
+	{
+		return (bool) empty( $this->_items );
+	}
 
-		if ( isset( $container ) )
+	public function add_lists( Lists $lists )
+	{
+		if ( $lists instanceof Lists )
 		{
-			$this->set_container( $container );
-		}
-
-		if ( isset( $attr ) )
-		{
-			$this->add_attributes( $attr );
+			$this->_items = $lists;
 		}
 
 		return $this;
 	}
 
-	public function set_value( $badge )
+	public function add_items( array $items )
 	{
-		$this->_value = $badge;
-
-		return $this;
-	}
-
-	public function __clone()
-	{
-		if ( is_object( $this->container ) )
+		foreach ( $items as $item )
 		{
-			$this->container = clone $this->container;
+			$this->add_item( $item );
 		}
 
 		return $this;
 	}
 
-	/**
-	 * Render
-	 *
-	 * @return null|string
-	 */
-	public function render()
+	public function add_item( $item )
 	{
-		if ( isset( $this->_value ) )
+		if ( $this->_items instanceof Lists )
 		{
-			if ( isset( $this->container ) )
+			$this->_items->add_item( $item );
+		}
+		else
+		{
+			$this->_items[] = $item;
+		}
+
+		return $this;
+	}
+
+	public function set_items_map( array $map )
+	{
+		foreach ( $map as $key => $index )
+		{
+			if ( isset( $this->_items[ $key ] ) )
 			{
-				if ( method_exists( $this->container, 'append_label' ) )
-				{
-					$this->container->append_label( new Tag( $this->_tag, $this->_value, $this->_attributes ) );
-				}
-				elseif ( method_exists( $this->container, 'append_content' ) )
-				{
-					$this->container->append_content( new Tag( $this->_tag, $this->_value, $this->_attributes ) );
-				}
-
-				return $this->container->render();
-			}
-			else
-			{
-				return ( new Tag( $this->_tag, $this->_value, $this->_attributes ) )->render();
+				$this->_items[ $index ] = $this->_items[ $key ];
+				unset( $this->_items[ $key ] );
 			}
 		}
+	}
 
-		return '';
+
+	public function set_num_rows( $rows )
+	{
+		if ( is_numeric( $rows ) )
+		{
+			$this->_num_rows = (int) $rows;
+		}
+
+		return $this;
+	}
+
+	public function set_num_per_rows( $num )
+	{
+		if ( is_numeric( $num ) )
+		{
+			$this->_num_per_rows = (int) $num;
+		}
+
+		return $this;
 	}
 }

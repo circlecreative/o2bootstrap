@@ -1,136 +1,175 @@
 <?php
 /**
- * YukBisnis.com
+ * O2Bootstrap
  *
- * Application Engine under O2System Framework for PHP 5.4 or newer
+ * An open source bootstrap components factory for PHP 5.4+
  *
- * This content is released under PT. Yuk Bisnis Indonesia License
+ * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * Copyright (c) 2015, PT. Lingkar Kreasi (Circle Creative).
  *
- * @package        Applications
- * @author         Aradea
- * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
- * @since          Version 2.0.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package     O2Bootstrap
+ * @author      Circle Creative Dev Team
+ * @copyright   Copyright (c) 2005 - 2015, .
+ * @license     http://circle-creative.com/products/o2bootstrap/license.html
+ * @license     http://opensource.org/licenses/MIT  MIT License
+ * @link        http://circle-creative.com/products/o2parser.html
  * @filesource
  */
-
 // ------------------------------------------------------------------------
+
 namespace O2System\Bootstrap\Factory;
 
 
-use O2System\Bootstrap\Interfaces\Factory;
-use O2System\Bootstrap\Factory\Tag;
+use O2System\Bootstrap\Interfaces\FactoryInterface;
+use O2System\Bootstrap\Interfaces\AlignmentInterface;
+use O2System\Bootstrap\Interfaces\ContextualInterface;
+use O2System\Bootstrap\Interfaces\IconInterface;
+use O2System\Bootstrap\Interfaces\PrintableInterface;
+use O2System\Bootstrap\Interfaces\ResponsiveInterface;
+use O2System\Bootstrap\Interfaces\SizeInterface;
+use O2System\Bootstrap\Interfaces\TypographyInterface;
 
 /**
  *
  * @package Label
  */
-class Label extends Factory
+class Label extends FactoryInterface
 {
-	protected $_label = NULL;
-	protected $_attributes
-		= array(
-			'class' => ['label'],
-		);
+	use AlignmentInterface;
+	use TypographyInterface;
+	use IconInterface;
+	use SizeInterface;
+	use ContextualInterface;
+	use ResponsiveInterface;
+	use PrintableInterface;
 
-    // ------------------------------------------------------------------------
+	const DEFAULT_LABEL = 'default';
+	const PRIMARY_LABEL = 'primary';
+	const SUCCESS_LABEL = 'success';
+	const INFO_LABEL    = 'info';
+	const WARNING_LABEL = 'warning';
+	const DANGER_LABEL  = 'danger';
 
-    /**
-     * build
-     * @param string | array  $label
-     * @param string $type
-     * @return object
-     */
+	protected $_tag        = 'span';
+	protected $_label      = NULL;
+	public $heading    = NULL;
+	protected $_attributes = array(
+		'class' => [ 'label' ],
+	);
+
+	// ------------------------------------------------------------------------
+
+	/**
+	 * build
+	 *
+	 * @param string | array $label
+	 * @param string         $type
+	 *
+	 * @return object
+	 */
 	public function build()
 	{
-        @list($label, $for,$type) = func_get_args();
+		$this->set_size_class_prefix( 'label' );
+		$this->set_contextual_class_prefix( 'label' );
 
-        if(is_array($label))
-        {
-            foreach ($label as $labels => $label_attributes)
-            {
+		@list( $label, $for, $attr, $type ) = func_get_args();
 
-                if(isset($this->_attributes))
-                {
-                    unset($this->_attributes);
-                    $this->_attributes['class'] = ['label'];
-                }
+		if ( $label instanceof Factory )
+		{
+			$this->_label = $label;
+		}
+		elseif ( is_string( $label ) )
+		{
+			$this->_label = $label;
+		}
+		elseif ( is_array( $label ) )
+		{
+			$this->add_attributes( $label );
+		}
 
-                if(isset($label_attributes['for'])
-                {
-                    $this->_attributes['for'] = $label_attributes['for'];
-                }
+		if ( isset( $for ) )
+		{
+			if ( is_array( $for ) )
+			{
+				$this->add_attributes( $for );
+			}
+			elseif ( is_string( $for ) )
+			{
+				if ( in_array( $for, $this->_contextual_classes ) )
+				{
+					$this->{'is_' . $for}();
+				}
+				elseif ( in_array( $for, $this->_sizes ) )
+				{
+					$this->{'is_' . $for}();
+				}
+				else
+				{
+					$this->_tag = 'label';
+					$this->add_attribute( 'for', $for );
+				}
+			}
+		}
 
-                if(isset($label_attributes['class']))
-                {
-                    $this->add_class('label-'.$label_attributes['class']);
-                }
+		if ( isset( $attr ) )
+		{
+			if ( is_array( $attr ) )
+			{
+				$this->add_attributes( $attr );
+			}
+			elseif ( is_string( $attr ) )
+			{
+				if ( in_array( $attr, $this->_contextual_classes ) )
+				{
+					$this->{'is_' . $attr}();
+				}
+				elseif ( in_array( $attr, $this->_sizes ) )
+				{
+					$this->{'is_' . $attr}();
+				}
+			}
+		}
 
-                if(isset($label_attributes['id']))
-                {
-                    $this->_attributes['id'] = $label_attributes['id'];
-                }
+		if ( isset( $type ) )
+		{
+			if ( is_string( $type ) AND in_array( $type, $this->_contextual_classes ) )
+			{
+				$this->{'is_' . $type}();
+			}
+		}
 
-                $array_label[$labels] = $this->_attributes;
-            }
-
-            $this->_label = $array_label;
-
-        }
-        else
-        {
-            $this->_label = $label;
-
-            if(isset($for)
-            {
-                $this->_attributes['for'] = $for;
-            }
-
-            if(isset($type))
-            {
-                $this->add_class( 'label-' . $type );
-            }
-        }
-
-        return $this;
+		return $this;
 
 	}
 
-    // ------------------------------------------------------------------------
+	// ------------------------------------------------------------------------
 
-    /**
-     * magic method __call
-     * @param string | array $method
-     * @param array $args
-     * @return object | error exception
-     */
-    public function __call($method, $args = array())
-    {
-        $method = $method === 'error' ? 'danger' : $method;
+	public function set_heading( $heading, $attr = array() )
+	{
+		$this->heading = new Tag( 'h3', $heading, $attr );
+		$this->heading->add_class( 'label-heading' );
 
-        if(method_exists($this, $method))
-        {
-            return call_user_func_array(array($this, $method), $args);
-        }
-        else
-        {
-            $func = array('danger','primary','success','info','warning');
-
-            if(in_array($method, $func))
-            {
-                @list($label,$for) = $args;
-
-                return $this->build($label,$for,$method);
-            }
-            else
-            {
-                throw new Exception("Label::".$method."does not Exist!!", 1);
-            }
-        }
-    }
-
-    // ------------------------------------------------------------------------
+		return $this;
+	}
 
 	/**
 	 * Render
@@ -139,21 +178,23 @@ class Label extends Factory
 	 */
 	public function render()
 	{
-		if ( isset( $this->_label ) && is_array($this->_label))
-        {
-            foreach ($this->_label as $label => $attributes) {
-
-
-                $output[] = (new Tag('span', $label, $attributes))->render();
-            }
-
-            return implode(PHP_EOL, $output);
-        }
-        else
+		if ( isset( $this->_label ) )
 		{
-			return (new Tag('span', $this->_label, $this->_attributes))->render();
+			if ( isset( $this->heading ) )
+			{
+				$label = new Label( $this->_label, $this->_attributes );
+				$label->set_tag( $this->_tag );
+
+				$this->heading->append_content( $label );
+
+				return $this->heading->render();
+			}
+			else
+			{
+				return ( new Tag( $this->_tag, $this->_label, $this->_attributes ) )->render();
+			}
 		}
 
-		return NULL;
+		return '';
 	}
 }

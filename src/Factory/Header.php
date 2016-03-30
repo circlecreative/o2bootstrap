@@ -39,111 +39,115 @@
 namespace O2System\Bootstrap\Factory;
 
 use O2System\Bootstrap\Interfaces\FactoryInterface;
-use O2System\Bootstrap\Interfaces\SizeInterface;
-use O2System\Bootstrap\Interfaces\ContentInterface;
 
-/**
- *
- * @package well
- */
-class Well extends FactoryInterface
+class Header extends FactoryInterface
 {
-	use ContentInterface;
-	use SizeInterface;
-
-	const SMALL_WELL  = 'small';
-	const MEDIUM_WELL = 'medium';
-	const LARGE_WELL  = 'large';
-
-	protected $_tag        = 'div';
+	protected $_tag = 'div';
 	protected $_attributes = array(
-		'class' => [ 'well' ],
+		'class' => [ 'page-header' ]
 	);
+	protected $_is_page_header = TRUE;
+	public $title = NULL;
+	public $subtext = NULL;
 
-	// ------------------------------------------------------------------------
-
-	/**
-	 * build
-	 *
-	 * @return object
-	 */
 	public function build()
 	{
-		@list( $content, $type, $attr ) = func_get_args();
+		@list($title, $attr) = func_get_args();
 
-		$this->set_size_class_prefix( 'well' );
-
-		if ( is_array( $content ) )
+		if( is_array( $title ) )
 		{
-			if( ! isset( $content[ 'id' ] ) OR 
-				! isset( $content[ 'class' ] ) OR
-				! isset( $content[ 'style' ] )
-			)
-			{
-				$this->set_content( $content );
-			}
-			else
-			{
-				$attr = $content;
-			}
+			$attr = $title;
 		}
-		elseif ( is_string( $content ) )
+		else
 		{
-			if ( in_array( $content, $this->_sizes ) AND $content !== 'tiny' )
-			{
-				$this->{'is_' . $content}();
-			}
-			else
-			{
-				$this->set_content( $content );
-			}
+			$this->set_title( $title );
 		}
 
-		if ( isset( $type ) )
+		if( isset( $attr ) )
 		{
-			if ( is_array( $type ) )
-			{
-				$this->add_attributes( $type );
-			}
-			elseif ( is_string( $type ) )
-			{
-				if ( in_array( $type, $this->_sizes ) AND $type !== 'tiny' )
-				{
-					$this->{'is_' . $type}();
-				}
-			}
+			$this->add_attributes( $attr );
 		}
 
-		if ( isset( $attr ) )
+		return $this;
+	}
+
+	public function __clone()
+	{
+		foreach ( [ 'title', 'subtext' ] as $object )
 		{
-			if ( is_array( $attr ) )
+			if ( is_object( $this->{$object} ) )
 			{
-				$this->add_attributes( $attr );
-			}
-			elseif ( is_string( $attr ) )
-			{
-				if ( in_array( $attr, $this->_sizes ) AND $attr !== 'tiny' )
-				{
-					$this->{'is_' . $attr}();
-				}
+				$this->{$object} = clone $this->{$object};
 			}
 		}
 
 		return $this;
 	}
 
-	// ------------------------------------------------------------------------
+	public function set_title( $title, $tag = 'h1', $attr = array() )
+	{
+		if( is_array( $tag ) )
+		{
+			$attr = $tag;
+			$tag = $this->_is_page_header === TRUE ? 'h1' : 'h2';
+		}
 
-	/**
-	 * Render
-	 *
-	 * @return null|string
-	 */
+		if( $title instanceof Tag )
+		{
+			$this->title = clone $title;
+			$this->title->set_tag( $tag );
+		}
+		else
+		{
+			$this->title = new Tag( $tag, $title, $attr );
+		}
+
+		return $this;
+	}
+
+	public function set_subtext( $subtext, $tag = 'small', $attr = array() )
+	{
+		if( is_array( $tag ) )
+		{
+			$attr = $tag;
+			$tag = 'small';
+		}
+
+		if( $subtext instanceof Tag )
+		{
+			$this->subtext = clone $subtext;
+			$this->subtext->set_tag( $tag );
+		}
+		else
+		{
+			$this->subtext = new Tag( $tag, $subtext, $attr );
+		}
+
+		return $this;
+	}
+
+	public function is_page_header( $is_page_header )
+	{
+		$this->_is_page_header = (bool) $is_page_header;
+	}
+
 	public function render()
 	{
-		if ( ! empty( $this->_content ) )
+		if( isset( $this->title ) )
 		{
-			return ( new Tag( $this->_tag, implode(PHP_EOL, $this->_content), $this->_attributes ) )->render();
+			if( isset( $this->subtext ) )
+			{
+				$this->title->append_content( $this->subtext );
+			}
+
+			if( $this->is_page_header === TRUE )
+			{
+				return ( new Tag( $this->_tag, $this->title, $this->_attributes) )->render();
+			}
+			else
+			{
+				return $this->title->render();
+			}
 		}
 
 		return '';

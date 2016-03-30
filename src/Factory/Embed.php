@@ -38,99 +38,126 @@
 
 namespace O2System\Bootstrap\Factory;
 
-
 use O2System\Bootstrap\Interfaces\FactoryInterface;
-use O2System\Bootstrap\Interfaces\PrintableInterface;
-use O2System\Bootstrap\Interfaces\ResponsiveInterface;
-use O2System\Bootstrap\Interfaces\TypographyInterface;
 
-class Badge extends FactoryInterface
+class Embed extends FactoryInterface
 {
-	use PrintableInterface;
-	use ResponsiveInterface;
-	use TypographyInterface;
-
-	protected $_tag      = 'span';
-	protected $_value    = NULL;
-	public    $container = NULL;
-
-	protected $_attributes = array(
-		'class' => [ 'badge' ],
+	protected $_tag          = 'div';
+	protected $_aspect_ratio = '16:9';
+	protected $_attributes   = array(
+		'class' => [ 'embed-responsive' ],
 	);
+
+	public $source = NULL;
 
 	public function build()
 	{
-		@list( $value, $container, $attr ) = func_get_args();
+		@list( $src, $aspect_ratio, $attr ) = func_get_args();
 
-		if ( is_string( $value ) OR is_numeric( $value ) )
+		if ( is_string( $src ) )
 		{
-			$this->_value = $value;
+			if ( in_array( $src, [ '16:9', '4:3' ] ) )
+			{
+				$this->set_aspect_ratio( $src );
+			}
+			else
+			{
+				$this->set_source( $src );
+			}
 		}
-		elseif ( $value instanceof FactoryInterface )
+		elseif ( is_array( $src ) )
 		{
-			$container = $value;
-		}
-		elseif ( is_array( $value ) )
-		{
-			$attr = $value;
+			$attr = $src;
 		}
 
-		if ( isset( $container ) )
+		if ( is_array( $aspect_ratio ) )
 		{
-			$this->set_container( $container );
+			$attr = $aspect_ratio;
 		}
 
 		if ( isset( $attr ) )
 		{
 			$this->add_attributes( $attr );
 		}
-
-		return $this;
 	}
 
-	public function set_value( $badge )
+	public function set_aspect_ratio( $aspect_ratio )
 	{
-		$this->_value = $badge;
-
-		return $this;
-	}
-
-	public function __clone()
-	{
-		if ( is_object( $this->container ) )
+		if ( in_array( $aspect_ratio, [ '16:9', '4:3' ] ) )
 		{
-			$this->container = clone $this->container;
+			$this->_aspect_ratio = $aspect_ratio;
 		}
 
 		return $this;
 	}
 
-	/**
-	 * Render
-	 *
-	 * @return null|string
-	 */
-	public function render()
+	public function set_source( $source, $tag = 'iframe', $attr = array() )
 	{
-		if ( isset( $this->_value ) )
+		if ( is_array( $tag ) )
 		{
-			if ( isset( $this->container ) )
-			{
-				if ( method_exists( $this->container, 'append_label' ) )
-				{
-					$this->container->append_label( new Tag( $this->_tag, $this->_value, $this->_attributes ) );
-				}
-				elseif ( method_exists( $this->container, 'append_content' ) )
-				{
-					$this->container->append_content( new Tag( $this->_tag, $this->_value, $this->_attributes ) );
-				}
+			$attr = $tag;
+			$tag = 'iframe';
+		}
 
-				return $this->container->render();
+		$attr[ 'src' ] = str_replace( array(
+			                              'youtube.com/',
+			                              'youtu.be',
+		                              ), array(
+			                              'youtube.com/embed/',
+			                              'youtube.com/embed/',
+		                              ), $source );
+
+		if ( strpos( $attr[ 'src' ], 'youtube.com' ) !== FALSE )
+		{
+			$attr[ 'src' ] = $attr[ 'src' ] . '?rel=0';
+		}
+
+		if ( isset( $attr[ 'class' ] ) )
+		{
+			if ( is_array( $attr[ 'class' ] ) )
+			{
+				array_push( $attr[ 'class' ], 'embed-responsive-item' );
 			}
 			else
 			{
-				return ( new Tag( $this->_tag, $this->_value, $this->_attributes ) )->render();
+				$attr[ 'class' ] = $attr[ 'class' ] . ' embed-responsive-item';
 			}
+		}
+		else
+		{
+			$attr[ 'class' ] = 'embed-responsive-item';
+		}
+
+		if ( $tag === 'iframe' )
+		{
+			$attr[ 'allowfullscreen' ] = '';
+		}
+
+		$this->source = new Tag( $tag, $attr );
+
+		return $this;
+	}
+
+	public function render()
+	{
+		if ( ! empty( $this->source ) )
+		{
+			switch ( $this->_aspect_ratio )
+			{
+				case '4:3':
+					
+					$this->add_class( 'embed-responsive-4by3' );
+
+					break;
+				
+				default:
+					
+					$this->add_class( 'embed-responsive-16by9' );
+
+					break;
+			}
+
+			return ( new Tag( $this->_tag, $this->source, $this->_attributes ) )->render();
 		}
 
 		return '';
