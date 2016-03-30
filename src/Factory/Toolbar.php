@@ -38,114 +38,58 @@
 
 namespace O2System\Bootstrap\Factory;
 
+
 use O2System\Bootstrap\Interfaces\FactoryInterface;
-use O2System\Bootstrap\Interfaces\SizeInterface;
-use O2System\Bootstrap\Interfaces\ContentInterface;
+use O2System\Bootstrap\Interfaces\AlignmentInterface;
+use O2System\Bootstrap\Interfaces\ItemsInterface;
+use O2System\Bootstrap\Interfaces\PrintableInterface;
+use O2System\Bootstrap\Interfaces\ResponsiveInterface;
 
-/**
- *
- * @package well
- */
-class Well extends FactoryInterface
+class Toolbar extends FactoryInterface
 {
-	use ContentInterface;
-	use SizeInterface;
+	use ItemsInterface;
+	use AlignmentInterface;
+	use PrintableInterface;
+	use ResponsiveInterface;
 
-	const SMALL_WELL  = 'small';
-	const MEDIUM_WELL = 'medium';
-	const LARGE_WELL  = 'large';
+	protected $_tag = 'div';
 
-	protected $_tag        = 'div';
-	protected $_attributes = array(
-		'class' => [ 'well' ],
-	);
-
-	// ------------------------------------------------------------------------
-
-	/**
-	 * build
-	 *
-	 * @return object
-	 */
 	public function build()
 	{
-		@list( $content, $type, $attr ) = func_get_args();
-
-		$this->set_size_class_prefix( 'well' );
-
-		if ( is_array( $content ) )
-		{
-			if( ! isset( $content[ 'id' ] ) OR 
-				! isset( $content[ 'class' ] ) OR
-				! isset( $content[ 'style' ] )
-			)
-			{
-				$this->set_content( $content );
-			}
-			else
-			{
-				$attr = $content;
-			}
-		}
-		elseif ( is_string( $content ) )
-		{
-			if ( in_array( $content, $this->_sizes ) AND $content !== 'tiny' )
-			{
-				$this->{'is_' . $content}();
-			}
-			else
-			{
-				$this->set_content( $content );
-			}
-		}
-
-		if ( isset( $type ) )
-		{
-			if ( is_array( $type ) )
-			{
-				$this->add_attributes( $type );
-			}
-			elseif ( is_string( $type ) )
-			{
-				if ( in_array( $type, $this->_sizes ) AND $type !== 'tiny' )
-				{
-					$this->{'is_' . $type}();
-				}
-			}
-		}
+		@list( $attr ) = func_get_args();
 
 		if ( isset( $attr ) )
 		{
-			if ( is_array( $attr ) )
-			{
-				$this->add_attributes( $attr );
-			}
-			elseif ( is_string( $attr ) )
-			{
-				if ( in_array( $attr, $this->_sizes ) AND $attr !== 'tiny' )
-				{
-					$this->{'is_' . $attr}();
-				}
-			}
+			$this->add_attributes( $attr );
+		}
+
+		$this->add_attribute( 'role', 'toolbar' );
+
+		return $this;
+	}
+
+	public function add_item( $item )
+	{
+		if ( $item instanceof Group )
+		{
+			$this->_items[] = $item;
 		}
 
 		return $this;
 	}
 
-	// ------------------------------------------------------------------------
-
-	/**
-	 * Render
-	 *
-	 * @return null|string
-	 */
 	public function render()
 	{
-		if ( ! empty( $this->_content ) )
+		if ( ! empty( $this->_items ) )
 		{
-			return ( new Tag( $this->_tag, implode(PHP_EOL, $this->_content), $this->_attributes ) )->render();
+			foreach ( $this->_items as $item )
+			{
+				$output[] = $item->render();
+			}
+
+			return ( new Tag( $this->_tag, implode( PHP_EOL, $output ), $this->_attributes ) )->render();
 		}
 
-		return '';
+		return NULL;
 	}
 }

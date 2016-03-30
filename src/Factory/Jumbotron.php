@@ -1,161 +1,261 @@
 <?php
 /**
- * YukBisnis.com
+ * O2Bootstrap
  *
- * Application Engine under O2System Framework for PHP 5.4 or newer
+ * An open source bootstrap components factory for PHP 5.4+
  *
- * This content is released under PT. Yuk Bisnis Indonesia License
+ * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * Copyright (c) 2015, PT. Lingkar Kreasi (Circle Creative).
  *
- * @package        Applications
- * @author         Aradea
- * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
- * @since          Version 2.0.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package     O2Bootstrap
+ * @author      Circle Creative Dev Team
+ * @copyright   Copyright (c) 2005 - 2015, .
+ * @license     http://circle-creative.com/products/o2bootstrap/license.html
+ * @license     http://opensource.org/licenses/MIT  MIT License
+ * @link        http://circle-creative.com/products/o2parser.html
  * @filesource
  */
-
 // ------------------------------------------------------------------------
+
 namespace O2System\Bootstrap\Factory;
 
 
-use O2System\Bootstrap\Interfaces\Factory;
-use O2System\Bootstrap\Factory\Tag;
-use O2System\Bootstrap\Factory\Link;
+use O2System\Bootstrap\Interfaces\FactoryInterface;
+use O2System\Bootstrap\Interfaces\ContentInterface;
 
 /**
  *
  * @package Jumbotron
  */
-class Jumbotron extends Factory
+class Jumbotron extends FactoryInterface
 {
-    protected $_jumbotron = NULL;
-    protected $_header = NULL;
-    protected $_description = NULL;
-    protected $_link = NULL;
-    protected $_attributes
-        = array(
-            'class' => ['jumbotron']
-        );
+	protected $_tag        = 'div';
+	protected $_attributes = array(
+		'class' => [ 'jumbotron' ],
+	);
 
-    // ------------------------------------------------------------------------
+	protected $_is_full_width = FALSE;
 
-    /**
-     * build
-     * @return object
-     */
-    public function build()
-    {
-        @list($header, $description, $link) = func_get_args();
+	public $header      = NULL;
+	public $description = NULL;
+	public $link        = NULL;
+	public $buttons     = array();
 
-        $this->header($header);
-        $this->description($description);
+	// ------------------------------------------------------------------------
 
-        if(isset($link))
-        {
-            call_user_func_array(array($this, 'link'), $link);
-        }
+	/**
+	 * build
+	 *
+	 * @return object
+	 */
+	public function build()
+	{
+		@list( $attr ) = func_get_args();
 
-        return $this;
-    }
+		if ( is_array( $attr ) )
+		{
+			$this->add_attributes( $attr );
+		}
 
-    // ------------------------------------------------------------------------
+		return $this;
+	}
 
-    /**
-     * header
-     * @param string $header
-     * @return object
-     */
-    public function header($header)
-    {
-        $this->_header = $header;
+	// ------------------------------------------------------------------------
 
-        return $this;
-    }
+	public function __clone()
+	{
+		foreach ( [ 'header', 'link' ] as $object )
+		{
+			if ( is_object( $this->{$object} ) )
+			{
+				$this->{$object} = clone $this->{$object};
+			}
+		}
 
-    // ------------------------------------------------------------------------
+		foreach ( $this->buttons as $key => $button )
+		{
+			$this->buttons[ $key ] = clone $button;
+		}
 
-    /**
-     * description
-     * @param string $description
-     * @return object
-     */
-    public function description($description)
-    {
-        $this->_description = $description;
+		return $this;
+	}
 
-        return $this;
-    }
+	public function set_image( $image )
+	{
+		if ( is_file( $image ) )
+		{
+			$image = path_to_url( $image );
+		}
 
-    // ------------------------------------------------------------------------
+		$style = array(
+			"background-image: url('$image')",
+			'background-position: center',
+			'background-size: cover',
+		);
 
-    /**
-     * link
-     * @param string $link
-     * @param string $href
-     * @param string $attributes
-     * @return object
-     */
-    public function link($link, $href = NULL, $attributes=NULL)
-    {
-        if(is_null($attributes))
-        {
-            $attributes = 'build';
-        }
+		$this->add_attribute( 'style', implode( ';', $style ) );
 
-        if($link instanceof Link)
-        {
-            $this->_link = $link->render();
-        }
-        elseif(is_string($link))
-        {
-            $newlink = new Link;
-            $this->_link = $newlink->{$attributes}($link,$href)->render();
-        }
+		return $this;
+	}
+	
+	/**
+	 * Alert Title
+	 *
+	 * @param string $title
+	 * @param string $tag
+	 *
+	 * @return object
+	 */
+	public function set_header( $title, $tag = 'h1', $attr = array() )
+	{
+		if ( is_array( $tag ) )
+		{
+			$attr = $tag;
+		}
+		
+		if ( $title instanceof FactoryInterface )
+		{
+			$this->header = clone $title;
+			$this->header->set_tag( $tag );
+		}
+		else
+		{
+			$this->header = new Tag( $tag, ucwords( $title ), $attr );
+		}
 
-        return $this;
-    }
+		$this->header->add_class( 'jumbotron-header' );
+		
+		return $this;
+	}
+	
+	// ------------------------------------------------------------------------
 
-    // ------------------------------------------------------------------------
+	public function set_description( $description, $tag = 'p', $attr = array() )
+	{
+		if ( is_array( $tag ) )
+		{
+			$attr = $tag;
+			$tag = 'p';
+		}
 
-    /**
-     * Render
-     *
-     * @return
-     */
-    public function render()
-    {
-        if ( isset( $this->_description ) )
-        {
+		if ( $description instanceof Tag )
+		{
+			$this->description = $description;
+		}
+		else
+		{
+			$this->description = new Tag( $tag, $description, $attr );
+		}
 
-            $jumbotron = new Tag('div', NULL, $this->_attributes);
+		$this->description->add_class( 'jumbotron-description' );
 
-            $output[] = $jumbotron->open();
+		return $this;
+	}
 
-            if(isset($this->_header))
-            {
-                $output[] = (new Tag('h1',$this->_header,array()))->render();
-            }
+	/**
+	 * link
+	 *
+	 * @param string $link
+	 * @param string $href
+	 * @param string $attributes
+	 *
+	 * @return object
+	 */
+	public function set_link( $link, $attr = array() )
+	{
+		if ( $link instanceof Link )
+		{
+			$this->link = clone $link;
+		}
+		else
+		{
+			$this->link = new Link( '', $link, $attr );
+		}
 
-            $output[] = (new Tag('p',$this->_description,array()))->render();
+		return $this;
+	}
 
-            if(isset($this->_link))
-            {
-                $link = new Tag('p',NULL,array());
+	// ------------------------------------------------------------------------
 
-                $output[] = $link->open();
+	public function add_button( $label, $attr = array() )
+	{
+		if ( $label instanceof Button )
+		{
+			$this->buttons[] = $label;
+		}
+		elseif ( $label instanceof Link )
+		{
+			$this->buttons[] = $label;
+		}
+		else
+		{
+			$this->buttons = new Button( $label, $attr );
+		}
 
-                $output[] = $this->_link;
+		return $this;
+	}
 
-                $output[] = $link->close();
-            }
+	/**
+	 * Render
+	 *
+	 * @return
+	 */
+	public function render()
+	{
+		if ( ! empty( $this->description ) )
+		{
+			if ( isset( $this->header ) )
+			{
+				if ( isset( $this->link ) )
+				{
+					$header = clone $this->link;
 
-            $output[] = $jumbotron->close();
+					if ( method_exists( $header, 'append_content' ) )
+					{
+						$header->append_content( $this->header );
+					}
+					elseif ( method_exists( $header, 'append_label' ) )
+					{
+						$header->append_label( $this->header );
+					}
+				}
+				else
+				{
+					$header = $this->header;
+				}
 
-            return implode( PHP_EOL, $output );
+				$output[] = $header;
+			}
 
-        }
+			$output[] = $this->description;
 
-        return NULL;
-    }
+			if ( ! empty( $this->buttons ) )
+			{
+				$output[] = new Tag( 'p', implode( PHP_EOL, $this->buttons ), [ 'class' => 'jumbotron-buttons' ] );
+			}
+
+			return ( new Tag( $this->_tag, implode( PHP_EOL, $output ), $this->_attributes ) )->render();
+		}
+
+		return '';
+	}
 }

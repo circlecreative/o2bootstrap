@@ -1,43 +1,66 @@
 <?php
 /**
- * Created by PhpStorm.
- * User: Steeven
- * Date: 28/10/2015
- * Time: 11:57
+ * O2Bootstrap
+ *
+ * An open source bootstrap components factory for PHP 5.4+
+ *
+ * This content is released under the MIT License (MIT)
+ *
+ * Copyright (c) 2015, PT. Lingkar Kreasi (Circle Creative).
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package     O2Bootstrap
+ * @author      Circle Creative Dev Team
+ * @copyright   Copyright (c) 2005 - 2015, .
+ * @license     http://circle-creative.com/products/o2bootstrap/license.html
+ * @license     http://opensource.org/licenses/MIT  MIT License
+ * @link        http://circle-creative.com/products/o2parser.html
+ * @filesource
  */
+// ------------------------------------------------------------------------
 
 namespace O2System\Bootstrap\Factory;
 
-use O2System\Bootstrap\Interfaces\Factory;
+use O2System\Bootstrap\Interfaces\FactoryInterface;
+use O2System\Bootstrap\Interfaces\AlignmentInterface;
+use O2System\Bootstrap\Interfaces\PrintableInterface;
+use O2System\Bootstrap\Interfaces\ResponsiveInterface;
+use O2System\Bootstrap\Interfaces\TypographyInterface;
+use O2System\Bootstrap\Interfaces\ContentInterface;
 
-class Tag extends Factory
+
+class Tag extends FactoryInterface
 {
-	protected static $_self_closing_tags = array(
-		'area',
-		'base',
-		'br',
-		'col',
-		'command',
-		'embed',
-		'hr',
-		'img',
-		'input',
-		'keygen',
-		'link',
-		'meta',
-		'param',
-		'source',
-		'track',
-		'wbr',
-	);
+	use AlignmentInterface;
+	use TypographyInterface;
+	use ResponsiveInterface;
+	use PrintableInterface;
+	use ContentInterface;
 
 	protected $_tag;
-	protected $_content    = NULL;
+	
 	protected $_attributes = array();
 
 	public function build()
 	{
-		@list( $tag, $content, $attributes ) = func_get_args();
+		@list( $tag, $content, $attr ) = func_get_args();
 
 		if ( isset( $tag ) )
 		{
@@ -48,19 +71,18 @@ class Tag extends Factory
 		{
 			if ( is_array( $content ) )
 			{
-				$attributes = $content;
+				$attr = $content;
 			}
-			elseif ( is_string( $content ) )
+			else
 			{
-				$this->content( $content );
-			}
-			elseif ( $content instanceof Tag )
-			{
-				$this->_content = $content;
+				$this->set_content( $content );
 			}
 		}
 
-		$this->_attributes = $attributes;
+		if ( ! empty( $attr ) )
+		{
+			$this->add_attributes( $attr );
+		}
 
 		return $this;
 	}
@@ -70,69 +92,12 @@ class Tag extends Factory
 		$this->_tag = $tag;
 	}
 
-	/**
-	 * Set HTML ID
-	 *
-	 * @param   string $id
-	 *
-	 * @access  public
-	 * @return  $this
-	 */
-	public function set_id( $id )
-	{
-		$this->add_attribute( 'id', $id );
-
-		return $this;
-	}
-
-	public function set_classes( array $classes = array() )
-	{
-		if ( ! isset( $this->_attributes[ 'class' ] ) )
-		{
-			$this->_attributes[ 'class' ] = $classes;
-		}
-		else
-		{
-			$this->_attributes[ 'class' ] = array_merge( $this->_attributes[ 'class' ], $classes );
-		}
-
-		return $this;
-	}
-
-	public function add_class( $class )
-	{
-		if ( ! isset( $this->_attributes[ 'class' ] ) )
-		{
-			$this->_attributes[ 'class' ] = array();
-		}
-
-		array_push( $this->_attributes[ 'class' ], $class );
-
-		return $this;
-	}
-
-	public function set_attributes( array $attributes = array() )
-	{
-		if ( empty( $this->_attributes ) )
-		{
-			$this->_attributes = $attributes;
-		}
-		else
-		{
-			$this->_attributes = array_merge( $this->_attributes, $attributes );
-		}
-
-		return $this;
-	}
-
-	public function add_attribute( $name, $value )
-	{
-		$this->_attributes[ $name ] = $value;
-	}
-
 	public function open()
 	{
-		return '<' . $this->_tag . $this->_stringify_attributes( $this->_attributes ) . ( in_array( $this->_tag, self::$_self_closing_tags ) ? '/>' : '>' );
+		$attr = $this->_attributes;
+		unset( $attr[ 'realpath' ] );
+
+		return '<' . $this->_tag . $this->_stringify_attributes( $attr ) . '>';
 	}
 
 	public function close()
@@ -140,37 +105,53 @@ class Tag extends Factory
 		return '</' . $this->_tag . '>';
 	}
 
-	public function content( $content )
-	{
-		$this->_content = trim( $content );
-	}
-
 	public function render()
 	{
-		if ( in_array( $this->_tag, self::$_self_closing_tags ) )
+		$self_closing_tags = array(
+			'area',
+			'base',
+			'br',
+			'col',
+			'command',
+			'embed',
+			'hr',
+			'img',
+			'input',
+			'keygen',
+			'link',
+			'meta',
+			'param',
+			'source',
+			'track',
+			'wbr',
+		);
+
+		if ( in_array( $this->_tag, $self_closing_tags ) )
 		{
-			return $this->open();
+			$attr = $this->_attributes;
+			unset( $attr[ 'realpath' ] );
+
+			return '<' . $this->_tag . $this->_stringify_attributes( $attr ) . ' />';
 		}
 		else
 		{
 			$output[] = $this->open();
 
-			if ( $this->_content instanceof Tag )
-			{
-				$output[] = $this->_content->render();
-			}
-			elseif ( empty( $this->_content ) )
+			if ( empty( $this->_content ) )
 			{
 				$output[] = $this->close();
+
 				return implode( '', $output );
 			}
 			else
 			{
-				$output[] = $this->_content;
+				$output[] = implode( PHP_EOL, $this->_content );
 				$output[] = $this->close();
 
 				return implode( PHP_EOL, $output );
 			}
 		}
+
+		return '';
 	}
 }

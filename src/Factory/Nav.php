@@ -1,115 +1,154 @@
 <?php
 /**
- * YukBisnis.com
+ * O2Bootstrap
  *
- * Application Engine under O2System Framework for PHP 5.4 or newer
+ * An open source bootstrap components factory for PHP 5.4+
  *
- * This content is released under PT. Yuk Bisnis Indonesia License
+ * This content is released under the MIT License (MIT)
  *
- * Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
+ * Copyright (c) 2015, PT. Lingkar Kreasi (Circle Creative).
  *
- * @package        Applications
- * @author         Aradea
- * @copyright      Copyright (c) 2015, PT. Yuk Bisnis Indonesia.
- * @since          Version 2.0.0
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ *
+ * @package     O2Bootstrap
+ * @author      Circle Creative Dev Team
+ * @copyright   Copyright (c) 2005 - 2015, .
+ * @license     http://circle-creative.com/products/o2bootstrap/license.html
+ * @license     http://opensource.org/licenses/MIT  MIT License
+ * @link        http://circle-creative.com/products/o2parser.html
  * @filesource
  */
-
 // ------------------------------------------------------------------------
+
 namespace O2System\Bootstrap\Factory;
 
-use O2System\Bootstrap\Interfaces\Factory;
+use O2System\Bootstrap\Interfaces\IconInterface;
 
 /**
  *
  * @package Nav
  */
-class Nav extends Factory
+class Nav extends Lists
 {
-	protected $_attributes = array(
-		'class' => array(
-			'nav',
-		),
-	);
-	protected $_menus      = array();
+	use IconInterface;
 
-	// ------------------------------------------------------------------------
+	const NAV_TABS  = 'NAV_TABS';
+	const NAV_PILLS = 'NAV_PILLS';
+
+	protected $_attributes = array(
+		'class' => array( 'nav' ),
+	);
 
 	/**
-	 * Add Tab Menu
-	 *
-	 * @param   string       $label
-	 * @param   string|array $link
-	 * @param   array        $attr
-	 *
-	 * @access  public
-	 * @return  $this
+	 * build
 	 */
-	public function add_menu( $label, $link, array $attr = array() )
+	public function build()
 	{
-		if ( is_array( $label ) )
+		@list( $type, $attr ) = func_get_args();
+
+		if ( isset( $type ) )
 		{
-			foreach ( $label as $key => $value )
+			if ( is_string( $type ) )
 			{
-				$$key = $value;
+				if ( in_array( $type, [ self::NAV_TABS, self::NAV_PILLS ] ) )
+				{
+					$this->set_type( $type );
+				}
+			}
+			elseif ( is_array( $type ) )
+			{
+				$attr = $type;
 			}
 		}
 
-		$menu[ 'label' ] = $label;
-
-		if ( is_string( $link ) )
+		if ( isset( $attr ) )
 		{
-			$menu[ 'link' ] = [ 'href' => $link ];
+			$this->add_attributes( $attr );
 		}
-		elseif ( $link instanceof Nav )
-		{
-			$menu[ 'link' ] = $link;
-		}
-		else
-		{
-			if ( is_array( $link ) )
-			{
-				if ( isset( $link[ 'attr' ] ) )
-				{
-					$link_attr = $link[ 'attr' ];
-					unset( $link[ 'attr' ] );
-
-					$menu[ 'link' ] = array_merge( $link, $link_attr );
-					unset($link_attr);
-				}
-				else
-				{
-					$menu[ 'link' ] = $link;
-				}
-			}
-		}
-
-		if ( empty( $attr ) )
-		{
-			$attr = [ 'role' => 'presentation' ];
-		}
-		elseif ( ! isset( $attr[ 'role' ] ) )
-		{
-			$attr[ 'role' ] = 'presentation';
-		}
-
-		$menu[ 'attr' ] = $attr;
-
-		$this->_menus[] = $menu;
 
 		return $this;
 	}
 
 	// ------------------------------------------------------------------------
 
+	public function set_type( $type )
+	{
+		$types = array(
+			self::NAV_TABS  => 'nav-tabs',
+			self::NAV_PILLS => 'nav-pills',
+		);
+
+		if ( array_key_exists( $type, $types ) )
+		{
+			$this->add_class( $types[ $type ] );
+		}
+
+		return $this;
+	}
+
+	public function add_item( $item, $describe = NULL, $attr = array() )
+	{
+		if ( $item instanceof Link )
+		{
+			$attr[ 'role' ] = 'presentation';
+
+			if ( class_exists( 'O2System', FALSE ) )
+			{
+				if ( $item->get_attribute( 'href' ) === current_url() )
+				{
+					$describe = Lists::ITEM_ACTIVE;
+				}
+			}
+
+			parent::add_item( $item, $describe, $attr );
+		}
+		elseif ( $item instanceof Dropdown )
+		{
+			$dropdown = clone $item;
+			$dropdown->set_tag( 'li' );
+
+			if ( isset( $dropdown->button ) )
+			{
+				$dropdown->button->set_tag( 'a' )->set_class( 'dropdown-toggle' )->add_attribute( 'href', '#' );
+			}
+
+			$dropdown->add_attribute( 'role', 'presentation' );
+			$this->_items[] = $dropdown;
+		}
+		elseif ( is_string( $item ) )
+		{
+			$item = new Link( $item, '#' );
+
+			parent::add_item( $item, $describe, $attr );
+		}
+
+		return $this;
+	}
+
 	/**
 	 * stacked
 	 *
 	 * @return object
 	 */
-	public function stacked()
+	public function is_stacked()
 	{
-		$this->_attributes[ 'class' ][] = 'nav-stacked';
+		$this->add_class( 'nav-stacked' );
 
 		return $this;
 	}
@@ -121,147 +160,14 @@ class Nav extends Factory
 	 *
 	 * @return object
 	 */
-	public function justified()
+	public function is_justified()
 	{
-		$this->_attributes[ 'class' ][] = 'nav-justified';
+		$this->add_class( 'nav-justified' );
 
 		return $this;
 	}
 
 	// ------------------------------------------------------------------------
 
-	/**
-	 * build
-	 */
-	public function build()
-	{
-		@list( $nav, $type ) = func_get_args();
-		$this->add_class( 'navbar-nav' );
-		$this->_nav = $nav;
 
-		return $this;
-	}
-
-	// ------------------------------------------------------------------------
-
-	/**
-	 * render
-	 *
-	 * @return string
-	 */
-	public function render()
-	{
-
-		if ( isset( $this->_nav ) )
-		{
-			$navbar = new Tag( 'ul', NULL, $this->_attributes );
-
-			$output[] = $navbar->open();
-
-			foreach ( $this->_nav as $name => $attributes )
-			{
-
-				if ( isset( $attributes[ 'child' ] ) )
-				{
-					$child[] = '<ul class="dropdown-menu">';
-					foreach ( $nav[ 'child' ] as $childname => $childattributes )
-					{
-
-						$a = ( new Tag( 'a', $childname, $childattributes ) )->render();
-						$child[] = ( new Tag( 'li', $a, [ ] ) )->render();
-					}
-
-					$child[] = '</ul>';
-
-					$child_string = implode( PHP_EOL, $child );
-					$caret = '<span class="caret"></span>';
-					$a = ( new Tag( 'a', $name . $caret, [ 'class' => "dropdown-toggle", 'data-toggle' => "dropdown", 'href' => "#" ] ) )->render();
-
-					$a = $a . $child_string;
-					$drop_attr = 'dropdown';
-				}
-				else
-				{
-					$a = ( new Tag( 'a', $name, $attributes ) )->render();
-					$drop_attr = '';
-				}
-
-				$output[] = ( new Tag( 'li', $a, [ 'class' => [ $drop_attr ] ] ) )->render();
-			}
-
-			$output[] = $navbar->close();
-
-			return implode( PHP_EOL, $output );
-		}
-
-		$menus = empty( $menus ) ? $this->_menus : $menus;
-		$output = array();
-		$has_active = FALSE;
-
-		if ( ! empty( $menus ) )
-		{
-			$ul = new Tag( 'ul', $this->_attributes );
-			$output[] = $ul->open();
-
-			foreach ( $menus as $menu )
-			{
-				if ( isset( $menu[ 'attributes' ][ 'class' ] ) )
-				{
-					if ( is_string( $menu[ 'attributes' ][ 'class' ] ) )
-					{
-						if ( strpos( $menu[ 'attributes' ][ 'class' ], 'active' ) !== FALSE )
-						{
-							$has_active = TRUE;
-							break;
-						}
-					}
-					elseif ( is_array( $menu[ 'attributes' ][ 'class' ] ) )
-					{
-						if ( in_array( 'active', $menu[ 'attributes' ][ 'class' ] ) !== FALSE )
-						{
-							$has_active = TRUE;
-							break;
-						}
-					}
-				}
-			}
-
-			if ( $has_active === FALSE )
-			{
-				$menus[ 0 ][ 'attributes' ][ 'class' ][] = 'active';
-			}
-
-			foreach ( $menus as $menu )
-			{
-				$li = new Tag( 'li', $menu[ 'attr' ] );
-				$output[] = $li->open();
-
-				if ( empty( $menu[ 'link' ] ) )
-				{
-					$output[] = $menu[ 'label' ];
-				}
-				elseif ( $menu[ 'link' ] instanceof Nav )
-				{
-					$attributes[ 'class' ] = 'dropdown-toggle';
-					$attributes[ 'data-toggle' ] = 'dropdown';
-					$attributes[ 'href' ] = '#';
-					$attributes[ 'role' ] = 'button';
-					$attributes[ 'aria-haspopup' ] = 'true';
-					$attributes[ 'aria-expanded' ] = 'false';
-
-					$output[] = ( new Tag( 'a', $menu[ 'label' ] . ( new Tag( 'span', [ 'class' => [ 'caret' ] ] ) )->render(), $attributes ) )->render();
-					$output[] = $menu[ 'link' ]->render();
-				}
-				else
-				{
-					$output[] = ( new Tag( 'a', $menu[ 'label' ], $menu[ 'link' ], $menu[ 'attr' ] ) )->render();
-				}
-
-				$output[] = $li->close();
-			}
-			$output[] = $ul->close();
-		}
-
-		return implode( PHP_EOL, $output );
-	}
 }
