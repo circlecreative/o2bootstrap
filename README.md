@@ -13,7 +13,7 @@ Installation
 ------------
 The best way to install [O2Bootstrap](https://packagist.org/packages/o2system/o2bootstrap) is to use [Composer][9]
 ```
-composer require o2system/o2bootstrap:'dev-master'
+composer require o2system/o2bootstrap
 ```
 
 Usage
